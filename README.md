@@ -10,6 +10,7 @@ pembelian, penjualan, dan logistik dalam satu alur kerja yang saling terhubung.
 ## Dokumen
 
 - [Panduan Rancangan (Design Blueprint)](docs/DESAIN.md) — arsitektur, struktur modul, model data, roadmap.
+- [Panduan Rilis & Build .deb](docs/RELEASE.md) — cara merilis versi baru dan build `.deb` otomatis.
 
 ## Teknologi
 
