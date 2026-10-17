@@ -1,0 +1,11 @@
+reptil (0.1.0-1) unstable; urgency=medium
+
+  * Pemaketan awal REPTIL sebagai paket .deb mandiri dengan virtualenv
+    terpisah pada /opt/reptil/venv.
+  * Tidak memasang maupun membundel PostgreSQL/pgAdmin; arahkan ke instance
+    PostgreSQL yang sudah ada melalui /etc/reptil/reptil.env.
+  * Pemilihan port aplikasi otomatis (default 8010) agar tidak bentrok
+    dengan port PostgreSQL (5432), pgAdmin (5050), atau dev server (8000).
+  * Perintah bantu: reptil-run, reptil-migrate, reptil-seed, reptil-check.
+
+ -- REPTIL <dev@reptil.co.id>  Sat, 17 Oct 2026 00:00:00 +0700

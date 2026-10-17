@@ -1,0 +1,116 @@
+{% extends "app.html" %}
+{% block title %}Laporan — {{ app_name }}{% endblock %}
+{% block page_title %}Laporan{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Periode Laporan</h2>
+    <form class="toolbar" method="get" action="/reports">
+      <label style="font-size:12.5px;color:#5c6b62">Dari</label>
+      <input type="date" name="dari" value="{{ dari }}">
+      <label style="font-size:12.5px;color:#5c6b62">Sampai</label>
+      <input type="date" name="sampai" value="{{ sampai }}">
+      <button class="btn" type="submit">Terapkan</button>
+      <a class="btn" href="/reports/sales?dari={{ dari }}&sampai={{ sampai }}">Analisis Penjualan</a>
+      <a class="btn" href="/reports/profit-loss?dari={{ dari }}&sampai={{ sampai }}">Laba Rugi</a>
+      <a class="btn" href="/reports/stock">Nilai Persediaan</a>
+    </form>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="lbl">Penjualan Periode Ini</div>
+      <div class="val">{{ rekap.total_penjualan | rupiah }}</div>
+      <div class="sub">{{ rekap.jumlah_faktur }} faktur · rata-rata {{ rekap.rata_rata_faktur | rupiah }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="lbl">Laba Kotor</div>
+      <div class="val">{{ (rekap.total_penjualan - rekap.hpp) | rupiah }}</div>
+      <div class="sub">penjualan − HPP {{ rekap.hpp | rupiah }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="lbl">Laba / (Rugi) Bersih</div>
+      <div class="val">{{ rekap.laba_bersih | rupiah }}</div>
+      <div class="sub">pendapatan {{ rekap.total_pendapatan | rupiah }} · beban {{ rekap.total_beban | rupiah }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="lbl">Nilai Persediaan</div>
+      <div class="val">{{ rekap.nilai_persediaan | rupiah }}</div>
+      <div class="sub">{{ rekap.item_minimum }} item di bawah minimum</div>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="item"><div class="lbl">Utang Usaha (sisa)</div><div class="val"><strong>{{ rekap.total_utang | rupiah }}</strong></div></div>
+    <div class="item"><div class="lbl">Piutang Usaha (sisa)</div><div class="val"><strong>{{ rekap.total_piutang | rupiah }}</strong></div></div>
+    <div class="item"><div class="lbl">Posisi Bersih</div><div class="val"><strong>{{ (rekap.total_piutang - rekap.total_utang) | rupiah }}</strong></div></div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <div class="panel-head"><h2>Penjualan Harian</h2></div>
+    <table>
+      <thead><tr><th>Tanggal</th><th class="num">Faktur</th><th class="num">Total</th></tr></thead>
+      <tbody>
+        {% for b in harian %}
+        <tr>
+          <td>{{ b.periode }}</td>
+          <td class="num">{{ b.jumlah }}</td>
+          <td class="num">{{ b.total | rupiah }}</td>
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="3">Belum ada penjualan pada periode ini.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Item Terlaris</h2>
+      <a class="btn small" href="/reports/sales?dari={{ dari }}&sampai={{ sampai }}">Semua</a>
+    </div>
+    <table>
+      <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Nilai</th></tr></thead>
+      <tbody>
+        {% for b in per_item %}
+        <tr>
+          <td><strong>{{ b.nama }}</strong><div class="muted" style="font-size:11.5px">{{ b.sku }}</div></td>
+          <td class="num">{{ b.qty | qty }} {{ b.satuan }}</td>
+          <td class="num">{{ b.total | rupiah }}</td>
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="3">Belum ada item terjual.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <h2>Unduh Laporan</h2>
+  </div>
+  <table>
+    <thead><tr><th>Laporan</th><th>Isi</th><th class="aksi">Unduh</th></tr></thead>
+    <tbody>
+      {% for d in daftar_ekspor %}
+      <tr>
+        <td><strong>{{ d.judul }}</strong></td>
+        <td class="muted" style="font-size:12.5px">{{ d.keterangan }}{% if not d.periode %} <em>(posisi terkini)</em>{% endif %}</td>
+        <td class="aksi">
+          <a class="btn small" href="/reports/export/{{ d.kode }}?dari={{ dari }}&sampai={{ sampai }}&format=csv">CSV</a>
+          <a class="btn small primary" href="/reports/export/{{ d.kode }}?dari={{ dari }}&sampai={{ sampai }}&format=xlsx">Excel</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="muted" style="font-size:12px;margin-top:10px">
+    Berkas CSV memakai pemisah desimal titik dan ejaan UTF-8; berkas Excel (.xlsx) sudah
+    berisi angka bertipe numerik sehingga bisa langsung dijumlahkan/di-pivot.
+  </div>
+</div>
+{% endblock %}

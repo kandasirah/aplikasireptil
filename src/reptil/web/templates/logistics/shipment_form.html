@@ -1,0 +1,63 @@
+{% extends "app.html" %}
+{% block title %}Pengiriman Baru — {{ app_name }}{% endblock %}
+{% block page_title %}Pengiriman Baru{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <h2>Buat Surat Jalan dari Pesanan Penjualan</h2>
+  {% if not orders %}
+  <div class="alert">Belum ada SO terkirim yang bisa dikirim. Kirim barang dari menu <strong>Pesanan Penjualan</strong> terlebih dahulu.</div>
+  {% endif %}
+  <form method="post" action="/logistics/shipments">
+    <div class="form-grid">
+      <div class="full">
+        <label>Pesanan Penjualan (terkirim)</label>
+        <select name="sales_order_id" required {{ 'disabled' if not orders }}>
+          <option value="">— pilih SO —</option>
+          {% for o in orders %}
+          <option value="{{ o.id }}">{{ o.number }} · {{ o.customer.nama }} · {{ o.total | rupiah }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Armada</label>
+        <select name="vehicle_id">
+          <option value="">— tanpa armada / pakai ekspedisi —</option>
+          {% for v in vehicles %}<option value="{{ v.id }}">{{ v.nama }}{% if v.plat %} ({{ v.plat }}){% endif %}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Ekspedisi</label>
+        <select name="carrier_id">
+          <option value="">— kirim sendiri —</option>
+          {% for c in carriers %}<option value="{{ c.id }}">{{ c.nama }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Nomor Resi</label>
+        <input type="text" name="resi" placeholder="opsional">
+      </div>
+      <div>
+        <label>Nama Penerima</label>
+        <input type="text" name="penerima" placeholder="default dari pelanggan">
+      </div>
+      <div>
+        <label>Telepon Penerima</label>
+        <input type="text" name="telepon_penerima" placeholder="opsional">
+      </div>
+      <div class="full">
+        <label>Alamat Kirim</label>
+        <input type="text" name="alamat_kirim" placeholder="default dari alamat pelanggan">
+      </div>
+      <div class="full">
+        <label>Catatan</label>
+        <input type="text" name="catatan" placeholder="opsional">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit" {{ 'disabled' if not orders }}>Buat Pengiriman</button>
+      <a class="btn" href="/logistics/shipments">Batal</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "app.html" %}
+{% block title %}Dashboard — {{ app_name }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid">
+  <div class="card">
+    <div class="label">Partner</div>
+    <div class="value">{{ cards.partner }}</div>
+    <div class="hint"><a href="/master/partners">kelola partner →</a></div>
+  </div>
+  <div class="card">
+    <div class="label">Item</div>
+    <div class="value">{{ cards.item }}</div>
+    <div class="hint"><a href="/master/items">kelola item →</a></div>
+  </div>
+  <div class="card">
+    <div class="label">Gudang</div>
+    <div class="value">{{ cards.warehouse }}</div>
+    <div class="hint"><a href="/master/warehouses">kelola gudang →</a></div>
+  </div>
+  <div class="card">
+    <div class="label">Item di Bawah Minimum</div>
+    <div class="value">{{ stok.item_minimum }}</div>
+    <div class="hint"><a href="/inventory/stock">lihat saldo stok →</a></div>
+  </div>
+</div>
+
+<div class="grid" style="margin-top:16px">
+  <div class="card">
+    <div class="label">PO Menunggu Diterima</div>
+    <div class="value">{{ beli.po_draft }}</div>
+    <div class="hint">Penerimaan: {{ beli.po_received }} PO</div>
+  </div>
+  <div class="card">
+    <div class="label">Utang (Faktur Belum Bayar)</div>
+    <div class="value" style="font-size:20px">{{ beli.nilai_utang | rupiah }}</div>
+    <div class="hint"><a href="/finance/payables">{{ beli.invoice_unpaid }} faktur belum lunas →</a></div>
+  </div>
+  <div class="card">
+    <div class="label">SO Menunggu Dikirim</div>
+    <div class="value">{{ jual.so_draft }}</div>
+    <div class="hint">Terkirim: {{ jual.so_delivered }} SO</div>
+  </div>
+  <div class="card">
+    <div class="label">Piutang (Faktur Belum Bayar)</div>
+    <div class="value" style="font-size:20px">{{ jual.nilai_piutang | rupiah }}</div>
+    <div class="hint"><a href="/finance/receivables">{{ jual.invoice_unpaid }} faktur belum lunas →</a></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Alur Kerja</h2>
+  <div style="font-size:13.5px;line-height:2;color:#3d4a43">
+    <strong>Pembelian:</strong>
+    <a href="/purchases/orders/new">buat PO</a> →
+    <a href="/purchases/orders">terima barang</a> (stok masuk otomatis) →
+    buat faktur → <a href="/purchases/invoices">bayar</a><br>
+    <strong>Penjualan:</strong>
+    <a href="/sales/orders/new">buat SO</a> →
+    <a href="/sales/orders">kirim barang</a> (stok berkurang, divalidasi) →
+    buat faktur → <a href="/sales/invoices">cetak PDF</a> / tandai lunas<br>
+    <strong>Stok:</strong>
+    <a href="/inventory/stock">saldo per gudang</a> ·
+    <a href="/inventory/movements">kartu stok</a><br>
+    <strong>Keuangan:</strong>
+    <a href="/finance/payables">utang</a> ·
+    <a href="/finance/receivables">piutang</a> ·
+    <a href="/finance/payments/new">catat pembayaran</a> ·
+    <a href="/finance/journal">jurnal</a> ·
+    <a href="/finance/trial-balance">neraca saldo</a>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Akses Anda</h2>
+  <div class="muted" style="font-size:12.5px;margin-bottom:6px">Role</div>
+  <div class="chips">{% for r in roles %}<span class="chip">{{ r }}</span>{% endfor %}</div>
+  <div class="muted" style="font-size:12.5px;margin:14px 0 6px">Izin</div>
+  <div class="chips">{% for p in permissions %}<span class="chip">{{ p }}</span>{% endfor %}</div>
+</div>
+
+<div class="panel" id="informasi-sistem">
+  <div class="panel-head">
+    <h2>Informasi Sistem</h2>
+    <a class="btn small" href="/pengaturan">Ubah Pengaturan</a>
+  </div>
+  <div class="detail-grid">
+    <div class="item">
+      <div class="lbl">Aplikasi</div>
+      <div class="val"><strong>{{ sistem.aplikasi }}</strong> v{{ sistem.versi }}</div>
+    </div>
+    <div class="item">
+      <div class="lbl">Perusahaan</div>
+      <div class="val">{{ profil.perusahaan }}</div>
+    </div>
+    <div class="item">
+      <div class="lbl">Lingkungan</div>
+      <div class="val"><span class="badge {{ 'paid' if sistem.lingkungan == 'production' else 'draft' }}">{{ sistem.lingkungan }}</span></div>
+    </div>
+    <div class="item">
+      <div class="lbl">Basis Data</div>
+      <div class="val">{{ sistem.database }}</div>
+    </div>
+    <div class="item">
+      <div class="lbl">Python</div>
+      <div class="val">{{ sistem.python }}</div>
+    </div>
+    <div class="item">
+      <div class="lbl">Waktu Server</div>
+      <div class="val">{{ sistem.waktu }} {{ sistem.zona }}</div>
+    </div>
+    <div class="item">
+      <div class="lbl">Organisasi</div>
+      <div class="val">{{ org.name }} ({{ org.code }})</div>
+    </div>
+    <div class="item">
+      <div class="lbl">Terakhir Masuk</div>
+      <div class="val">{{ user.last_login_at.strftime('%d/%m/%Y %H:%M') if user.last_login_at else '—' }}</div>
+    </div>
+  </div>
+  <div class="muted" style="font-size:12px;margin-top:12px">
+    Health check: <a href="/health" target="_blank">/health</a> ·
+    API docs: <a href="/docs" target="_blank">/docs</a> ·
+    {{ sistem.aplikasi }} dikembangkan sebagai modular monolith (FastAPI · PostgreSQL · Redis · Docker)
+  </div>
+</div>
+{% endblock %}

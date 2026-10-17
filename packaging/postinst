@@ -1,0 +1,78 @@
+#!/bin/sh
+# postinst - konfigurasi awal paket REPTIL.
+# TIDAK memasang PostgreSQL/pgAdmin. Hanya menyiapkan user, konfigurasi,
+# dan service systemd. Port aplikasi dipilih otomatis bila masih bebas.
+set -eu
+
+PKG_USER=reptil
+CONF=/etc/reptil/reptil.env
+VENV_PY=/opt/reptil/venv/bin/python
+
+case "$1" in
+    configure)
+        # 1. User & grup sistem
+        if ! getent group "$PKG_USER" >/dev/null; then
+            addgroup --system "$PKG_USER" >/dev/null
+        fi
+        if ! getent passwd "$PKG_USER" >/dev/null; then
+            adduser --system --ingroup "$PKG_USER" \
+                --home /opt/reptil --no-create-home \
+                --shell /usr/sbin/nologin \
+                --gecos "REPTIL service account" \
+                "$PKG_USER" >/dev/null
+        fi
+
+        # 2. Konfigurasi runtime (hanya dibuat sekali; upgrade tidak menimpa)
+        mkdir -p /etc/reptil
+        if [ ! -e "$CONF" ]; then
+            install -m 0640 -o root -g "$PKG_USER" \
+                /usr/share/reptil/reptil.env.example "$CONF"
+
+            # Pilih port aplikasi yang benar-benar bebas (hindari bentrok)
+            PORT="$("$VENV_PY" /usr/share/reptil/free_port.py 8010 || true)"
+            if [ -n "${PORT:-}" ]; then
+                sed -i "s|^APP_PORT=.*|APP_PORT=$PORT|" "$CONF"
+            fi
+
+            # Secret key acak
+            SECRET="$("$VENV_PY" -c 'import secrets; print(secrets.token_urlsafe(48))')"
+            sed -i "s|^SECRET_KEY=.*|SECRET_KEY=$SECRET|" "$CONF"
+
+            echo "REPTIL: konfigurasi dibuat di $CONF (APP_PORT=${PORT:-8010})"
+            echo "REPTIL: isi DATABASE_* lalu jalankan 'reptil-migrate' bila perlu."
+        fi
+        chown root:"$PKG_USER" "$CONF" 2>/dev/null || true
+        chmod 0640 "$CONF" 2>/dev/null || true
+
+        # 3. Service systemd
+        if [ -d /run/systemd/system ]; then
+            systemctl daemon-reload >/dev/null 2>&1 || true
+            if command -v deb-systemd-helper >/dev/null 2>&1; then
+                deb-systemd-helper unmask reptil.service >/dev/null 2>&1 || true
+                deb-systemd-helper enable reptil.service >/dev/null 2>&1 || true
+            else
+                systemctl enable reptil.service >/dev/null 2>&1 || true
+            fi
+            if command -v deb-systemd-invoke >/dev/null 2>&1; then
+                deb-systemd-invoke restart reptil.service >/dev/null 2>&1 || true
+            else
+                systemctl restart reptil.service >/dev/null 2>&1 || true
+            fi
+        fi
+
+        # 4. Migrasi database (best-effort: DB mungkin belum diisi/dijangkau)
+        if ! /opt/reptil/bin/reptil-migrate >/dev/null 2>&1; then
+            echo "REPTIL: migrasi database BELUM berhasil." >&2
+            echo "        Sunting $CONF (DATABASE_URL/DATABASE_*), lalu jalankan:" >&2
+            echo "        sudo reptil-migrate && sudo systemctl restart reptil" >&2
+        fi
+        ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+    *)
+        echo "postinst dipanggil dengan argumen tak dikenal: $1" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

@@ -1,0 +1,77 @@
+{% extends "app.html" %}
+{% block title %}Armada — {{ app_name }}{% endblock %}
+{% block page_title %}Armada / Kendaraan{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Armada</h2>
+    <form class="toolbar" method="get" action="/logistics/vehicles">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nama / plat…">
+      <select name="status">
+        <option value="">Semua status</option>
+        <option value="tersedia" {{ 'selected' if status == 'tersedia' }}>Tersedia</option>
+        <option value="dalam_tugas" {{ 'selected' if status == 'dalam_tugas' }}>Dalam Tugas</option>
+        <option value="perbaikan" {{ 'selected' if status == 'perbaikan' }}>Perbaikan</option>
+      </select>
+      <button class="btn" type="submit">Filter</button>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Kode</th><th>Nama</th><th>Plat</th><th>Pengemudi</th><th class="num">Kapasitas</th><th>Status</th><th class="aksi">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for v in vehicles %}
+      <tr>
+        <td>{{ v.kode }}</td>
+        <td><strong>{{ v.nama }}</strong><div class="muted">{{ v.tipe }}</div></td>
+        <td>{{ v.plat or '—' }}</td>
+        <td>{{ v.pengemudi or '—' }}<div class="muted">{{ v.telepon_pengemudi or '' }}</div></td>
+        <td class="num">{{ v.kapasitas_kg | qty }} kg · {{ v.kapasitas_m3 | qty }} m³</td>
+        <td><span class="badge {{ v.status }}">{{ {'tersedia':'Tersedia','dalam_tugas':'Dalam Tugas','perbaikan':'Perbaikan'}[v.status] }}</span></td>
+        <td class="aksi"><a class="btn small" href="/logistics/vehicles?edit={{ v.id }}">Ubah</a></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="7">Belum ada armada.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+
+<div class="panel">
+  <h2>{{ 'Ubah Armada' if edit_vehicle else 'Tambah Armada' }}</h2>
+  <form method="post" action="/logistics/vehicles">
+    <input type="hidden" name="vehicle_id" value="{{ edit_vehicle.id if edit_vehicle else '' }}">
+    <div class="form-grid">
+      <div><label>Kode</label><input type="text" name="kode" value="{{ edit_vehicle.kode if edit_vehicle else '' }}" required></div>
+      <div><label>Nama</label><input type="text" name="nama" value="{{ edit_vehicle.nama if edit_vehicle else '' }}" required></div>
+      <div><label>Tipe</label><input type="text" name="tipe" value="{{ edit_vehicle.tipe if edit_vehicle else 'truk' }}"></div>
+      <div><label>Plat</label><input type="text" name="plat" value="{{ edit_vehicle.plat or '' if edit_vehicle else '' }}"></div>
+      <div><label>Kapasitas (kg)</label><input type="text" name="kapasitas_kg" value="{{ edit_vehicle.kapasitas_kg if edit_vehicle else '0' }}"></div>
+      <div><label>Kapasitas (m³)</label><input type="text" name="kapasitas_m3" value="{{ edit_vehicle.kapasitas_m3 if edit_vehicle else '0' }}"></div>
+      <div><label>Pengemudi</label><input type="text" name="pengemudi" value="{{ edit_vehicle.pengemudi or '' if edit_vehicle else '' }}"></div>
+      <div><label>Telepon Pengemudi</label><input type="text" name="telepon_pengemudi" value="{{ edit_vehicle.telepon_pengemudi or '' if edit_vehicle else '' }}"></div>
+      <div>
+        <label>Status</label>
+        <select name="status">
+          {% set st = edit_vehicle.status if edit_vehicle else 'tersedia' %}
+          <option value="tersedia" {{ 'selected' if st == 'tersedia' }}>Tersedia</option>
+          <option value="dalam_tugas" {{ 'selected' if st == 'dalam_tugas' }}>Dalam Tugas</option>
+          <option value="perbaikan" {{ 'selected' if st == 'perbaikan' }}>Perbaikan</option>
+        </select>
+      </div>
+      <div><label>Aktif</label><input type="checkbox" name="is_active" {{ 'checked' if (not edit_vehicle) or edit_vehicle.is_active }}></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ 'Simpan Perubahan' if edit_vehicle else 'Tambah Armada' }}</button>
+      {% if edit_vehicle %}<a class="btn" href="/logistics/vehicles">Batal</a>{% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

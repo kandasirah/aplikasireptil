@@ -1,0 +1,49 @@
+{% extends "app.html" %}
+{% block title %}Faktur Pembelian — {{ app_name }}{% endblock %}
+{% block page_title %}Faktur Pembelian{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Faktur Pembelian</h2>
+    <form class="toolbar" method="get" action="/purchases/invoices">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nomor faktur…">
+      <select name="status">
+        <option value="">Semua status</option>
+        <option value="unpaid" {{ 'selected' if status == 'unpaid' }}>Belum dibayar</option>
+        <option value="partial" {{ 'selected' if status == 'partial' }}>Dibayar sebagian</option>
+        <option value="paid" {{ 'selected' if status == 'paid' }}>Lunas</option>
+      </select>
+      <button class="btn" type="submit">Filter</button>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Nomor</th><th>Tanggal</th><th>Pemasok</th><th>Ref. PO</th><th class="num">Total</th><th class="num">Sisa</th><th>Status</th><th class="aksi">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for f in invoices %}
+      <tr>
+        <td><a href="/purchases/invoices/{{ f.id }}"><strong>{{ f.number }}</strong></a></td>
+        <td>{{ f.tanggal | tanggal_id }}</td>
+        <td>{{ f.supplier.nama }}</td>
+        <td>{{ f.order.number if f.order else '—' }}</td>
+        <td class="num">{{ f.total | rupiah }}</td>
+        <td class="num">{{ (sisa.get(f.id, 0)) | rupiah }}</td>
+        <td><span class="badge {{ f.status }}">{{ {'unpaid':'Belum bayar','partial':'Dibayar sebagian','paid':'Lunas','cancelled':'Batal'}.get(f.status, f.status) }}</span></td>
+        <td class="aksi">
+          <a class="btn small" href="/purchases/invoices/{{ f.id }}/pdf" target="_blank">PDF</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="8">Belum ada faktur pembelian.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

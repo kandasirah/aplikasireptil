@@ -1,0 +1,87 @@
+{% extends "app.html" %}
+{% block title %}Catat {{ LABEL_ARAH[arah] }} — {{ app_name }}{% endblock %}
+{% block page_title %}Catat {{ LABEL_ARAH[arah] }}{% endblock %}
+
+{% block content %}
+<form method="post" action="/finance/payments">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>{{ 'Pembayaran utang ke pemasok' if arah == 'keluar' else 'Penerimaan piutang dari pelanggan' }}</h2>
+      <div class="toolbar">
+        <a class="btn {{ 'primary' if arah == 'keluar' }}" href="/finance/payments/new?arah=keluar">Bayar utang</a>
+        <a class="btn {{ 'primary' if arah == 'masuk' }}" href="/finance/payments/new?arah=masuk">Terima piutang</a>
+      </div>
+    </div>
+
+    <input type="hidden" name="arah" value="{{ arah }}">
+
+    <div class="form-grid">
+      <div class="full">
+        <label>Faktur belum lunas</label>
+        <select name="faktur_id" required>
+          <option value="">— pilih faktur —</option>
+          {% for b in pilihan %}
+          <option value="{{ b.faktur.id }}" {{ 'selected' if terpilih and terpilih.faktur.id == b.faktur.id }}>
+            {{ b.faktur.number }} · {{ b.partner.nama }} · sisa {{ b.sisa | rupiah }}
+            {%- if b.jatuh_tempo %} · jatuh {{ b.jatuh_tempo | tanggal_id }}{% endif %}
+          </option>
+          {% else %}
+          <option value="" disabled>Semua faktur sudah lunas</option>
+          {% endfor %}
+        </select>
+        <div class="muted" style="font-size:12px;margin-top:6px">
+          Daftar hanya memuat faktur yang masih punya sisa tagihan.
+        </div>
+      </div>
+
+      <div>
+        <label>Tanggal</label>
+        <input type="date" name="tanggal" value="{{ (terpilih and hari_ini) or hari_ini }}" required>
+      </div>
+
+      <div>
+        <label>Jumlah</label>
+        <input type="number" name="jumlah" step="0.01" min="0.01"
+               value="{{ terpilih.sisa if terpilih else '' }}"
+               placeholder="{{ terpilih.sisa if terpilih else 'kosongkan untuk melunasi' }}">
+        <div class="muted" style="font-size:12px;margin-top:6px">
+          Kosongkan untuk melunasi seluruh sisa tagihan.
+        </div>
+      </div>
+
+      <div>
+        <label>Akun kas / bank</label>
+        <select name="akun_id">
+          {% for a in akun %}
+          <option value="{{ a.id }}">{{ a.kode }} · {{ a.nama }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label>Metode</label>
+        <select name="metode">
+          {% for m in METODE %}
+          <option value="{{ m }}" {{ 'selected' if m == 'transfer' }}>{{ m | capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label>Referensi (no. transfer / cek)</label>
+        <input type="text" name="referensi" placeholder="mis. TRF-8891">
+      </div>
+
+      <div class="full">
+        <label>Catatan</label>
+        <textarea name="catatan" rows="2"></textarea>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Simpan {{ LABEL_ARAH[arah] }}</button>
+      <a class="btn" href="{{ '/finance/payables' if arah == 'keluar' else '/finance/receivables' }}">Batal</a>
+    </div>
+  </div>
+</form>
+{% endblock %}

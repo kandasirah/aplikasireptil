@@ -1,0 +1,60 @@
+{% extends "app.html" %}
+{% block title %}Neraca Saldo — {{ app_name }}{% endblock %}
+{% block page_title %}Neraca Saldo{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Saldo per Akun</h2>
+    <form class="toolbar" method="get" action="/finance/trial-balance">
+      <input type="date" name="dari" value="{{ dari }}">
+      <input type="date" name="sampai" value="{{ sampai }}">
+      <button class="btn" type="submit">Terapkan</button>
+      <a class="btn" href="/finance/journal">Jurnal Umum</a>
+      <a class="btn" href="/finance">Ringkasan</a>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Kode</th><th>Nama Akun</th><th>Tipe</th><th>Saldo Normal</th>
+          <th class="num">Debit</th><th class="num">Kredit</th><th class="num">Saldo</th></tr>
+    </thead>
+    <tbody>
+      {% for b in baris %}
+      <tr>
+        <td><strong>{{ b.akun.kode }}</strong></td>
+        <td>{{ b.akun.nama }}</td>
+        <td>{{ LABEL_TIPE_AKUN[b.akun.tipe] }}</td>
+        <td>{{ b.sisi }}</td>
+        <td class="num">{{ b.debit | rupiah }}</td>
+        <td class="num">{{ b.credit | rupiah }}</td>
+        <td class="num"><strong>{{ b.saldo | rupiah }}</strong></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="7">Belum ada jurnal pada rentang ini.</td></tr>
+      {% endfor %}
+      <tr>
+        <td colspan="4"><strong>Total</strong></td>
+        <td class="num"><strong>{{ total_debit | rupiah }}</strong></td>
+        <td class="num"><strong>{{ total_kredit | rupiah }}</strong></td>
+        <td class="num">
+          {% if total_debit == total_kredit %}
+            <span class="badge on">Seimbang</span>
+          {% else %}
+            <span class="badge unpaid">Tidak seimbang</span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+  <div class="muted" style="font-size:12px;margin-top:10px">
+    Hanya jurnal berstatus <strong>posted</strong> yang dihitung; jurnal dari pembayaran yang dibatalkan
+    berstatus <strong>void</strong> sehingga tidak lagi memengaruhi saldo.
+  </div>
+</div>
+{% endblock %}

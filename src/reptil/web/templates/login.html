@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Masuk — {{ app_name }}{% endblock %}
+
+{% block body %}
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-head">
+      {% if profil.app_logo_url %}
+        <img class="login-logo" src="{{ profil.app_logo_url }}" alt="Logo {{ app_name }}">
+      {% else %}
+        <div class="brand-mark">{{ app_name[0] | upper }}</div>
+      {% endif %}
+      <h1>{{ app_name }}</h1>
+      <p>{{ profil.app_tagline }}</p>
+      {% if profil.company_name %}<p class="login-company">{{ profil.perusahaan }}</p>{% endif %}
+    </div>
+
+    {% if error %}
+      <div class="alert">{{ error }}</div>
+    {% endif %}
+    {% if msg %}
+      <div class="alert ok">{{ msg }}</div>
+    {% endif %}
+
+    <form method="post" action="/login" autocomplete="on">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required autofocus
+             value="{{ email or '' }}" placeholder="nama@perusahaan.co.id">
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required placeholder="••••••••">
+
+      <button type="submit">Masuk</button>
+    </form>
+
+    <p class="footnote">Platform operasi bisnis terintegrasi</p>
+  </div>
+
+  <div class="login-foot">
+    {{ sistem.aplikasi }} v{{ sistem.versi }} · {{ sistem.lingkungan }} · {{ sistem.database }}
+    · {{ sistem.waktu }} {{ sistem.zona }}
+  </div>
+</div>
+{% endblock %}

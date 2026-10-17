@@ -1,0 +1,73 @@
+{% extends "app.html" %}
+{% block title %}{{ invoice.number }} — {{ app_name }}{% endblock %}
+{% block page_title %}Faktur Pembelian {{ invoice.number }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Informasi Faktur</h2>
+    <div class="btn-row">
+      <a class="btn primary" href="/purchases/invoices/{{ invoice.id }}/pdf" target="_blank">Cetak PDF</a>
+      {% if sisa > 0 %}
+      <a class="btn" href="/finance/payments/new?arah=keluar&faktur={{ invoice.id }}">Catat Pembayaran</a>
+      <form method="post" action="/purchases/invoices/{{ invoice.id }}/pay">
+        <button class="btn" type="submit">Bayar Lunas</button>
+      </form>
+      {% endif %}
+      <a class="btn" href="/purchases/invoices">Kembali</a>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="item"><div class="lbl">Nomor</div><div class="val"><strong>{{ invoice.number }}</strong></div></div>
+    <div class="item"><div class="lbl">Tanggal</div><div class="val">{{ invoice.tanggal | tanggal_id }}</div></div>
+    <div class="item"><div class="lbl">Jatuh Tempo</div><div class="val">{{ invoice.jatuh_tempo | tanggal_id }}</div></div>
+    <div class="item"><div class="lbl">Pemasok</div><div class="val">{{ invoice.supplier.nama }}</div></div>
+    <div class="item"><div class="lbl">Ref. PO</div><div class="val">{% if invoice.order %}<a href="/purchases/orders/{{ invoice.order.id }}">{{ invoice.order.number }}</a>{% else %}—{% endif %}</div></div>
+    <div class="item"><div class="lbl">No. Faktur Pemasok</div><div class="val">{{ invoice.supplier_ref or '—' }}</div></div>
+    <div class="item"><div class="lbl">Sudah Dibayar</div><div class="val">{{ (invoice.total - sisa) | rupiah }}</div></div>
+    <div class="item"><div class="lbl">Sisa Tagihan</div><div class="val"><strong>{{ sisa | rupiah }}</strong></div></div>
+    <div class="item"><div class="lbl">Status</div><div class="val"><span class="badge {{ invoice.status }}">{{ {'unpaid':'Belum bayar','partial':'Dibayar sebagian','paid':'Lunas','cancelled':'Batal'}.get(invoice.status, invoice.status) }}</span></div></div>
+  </div>
+
+  <table>
+    <thead><tr><th>#</th><th>Item</th><th class="num">Qty</th><th class="num">Harga</th><th class="num">Subtotal</th></tr></thead>
+    <tbody>
+      {% for l in invoice.lines %}
+      <tr>
+        <td>{{ l.line_no }}</td>
+        <td>{{ l.deskripsi or l.item.nama }}</td>
+        <td class="num">{{ l.qty | qty }}</td>
+        <td class="num">{{ l.harga | rupiah }}</td>
+        <td class="num">{{ l.subtotal | rupiah }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr><th colspan="4" class="num">Total</th><th class="num">{{ invoice.total | rupiah }}</th></tr>
+    </tfoot>
+  </table>
+
+  {% if pembayaran %}
+  <table style="margin-top:18px">
+    <thead><tr><th>Pembayaran</th><th>Tanggal</th><th>Akun</th><th>Metode</th><th class="num">Jumlah</th></tr></thead>
+    <tbody>
+      {% for b in pembayaran %}
+      <tr>
+        <td><a href="/finance/payments/{{ b.payment.id }}">{{ b.payment.number }}</a></td>
+        <td>{{ b.payment.tanggal | tanggal_id }}</td>
+        <td>{{ b.payment.akun.kode }} · {{ b.payment.akun.nama }}</td>
+        <td>{{ b.payment.metode }}{% if b.payment.referensi %} · {{ b.payment.referensi }}{% endif %}</td>
+        <td class="num">{{ b.jumlah | rupiah }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr><th colspan="4" class="num">Total dibayar</th><th class="num">{{ (invoice.total - sisa) | rupiah }}</th></tr>
+    </tfoot>
+  </table>
+  {% endif %}
+
+  {% if invoice.catatan %}<p class="muted" style="margin-top:12px">Catatan: {{ invoice.catatan }}</p>{% endif %}
+</div>
+{% endblock %}

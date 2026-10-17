@@ -1,0 +1,81 @@
+{% extends "app.html" %}
+{% block title %}{{ judul }} — {{ app_name }}{% endblock %}
+{% block page_title %}{{ judul }}{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Umur Tagihan</h2>
+    <a class="btn small primary" href="/finance/payments/new?arah={{ arah }}">Catat {{ LABEL_ARAH[arah] }}</a>
+  </div>
+  <table>
+    <thead><tr><th>Kelompok</th><th class="num">Faktur</th><th class="num">Nilai</th></tr></thead>
+    <tbody>
+      {% for kunci, label in LABEL_UMUR.items() %}
+      <tr>
+        <td>{{ label }}</td>
+        <td class="num">{{ umur[kunci].faktur }}</td>
+        <td class="num">{{ umur[kunci].jumlah | rupiah }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td><strong>Total</strong></td>
+        <td class="num"><strong>{{ total_faktur }}</strong></td>
+        <td class="num"><strong>{{ total | rupiah }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <h2>Rincian Faktur Belum Lunas</h2>
+    <form class="toolbar" method="get" action="{{ '/finance/payables' if arah == 'keluar' else '/finance/receivables' }}">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nomor faktur / nama…">
+      <button class="btn" type="submit">Cari</button>
+    </form>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Faktur</th><th>{{ 'Pemasok' if arah == 'keluar' else 'Pelanggan' }}</th>
+        <th>Tanggal</th><th>Jatuh Tempo</th><th class="num">Total</th>
+        <th class="num">Dibayar</th><th class="num">Sisa</th><th>Umur</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in tagihan %}
+      <tr>
+        <td>
+          {% if arah == 'keluar' %}
+            <a href="/purchases/invoices/{{ b.faktur.id }}">{{ b.faktur.number }}</a>
+          {% else %}
+            <a href="/sales/invoices/{{ b.faktur.id }}">{{ b.faktur.number }}</a>
+          {% endif %}
+        </td>
+        <td>{{ b.partner.nama }}</td>
+        <td>{{ b.faktur.tanggal | tanggal_id }}</td>
+        <td>{{ b.jatuh_tempo | tanggal_id if b.jatuh_tempo else '—' }}</td>
+        <td class="num">{{ b.total | rupiah }}</td>
+        <td class="num">{{ b.dibayar | rupiah }}</td>
+        <td class="num"><strong>{{ b.sisa | rupiah }}</strong></td>
+        <td>
+          {% if b.umur > 0 %}
+            <span class="badge unpaid">{{ b.umur }} hari lewat</span>
+          {% else %}
+            <span class="badge on">{{ -b.umur }} hari lagi</span>
+          {% endif %}
+        </td>
+        <td><a class="btn small" href="/finance/payments/new?arah={{ arah }}&faktur={{ b.faktur.id }}">Catat</a></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="9">{{ 'Tidak ada utang' if arah == 'keluar' else 'Tidak ada piutang' }} — semua faktur sudah lunas.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

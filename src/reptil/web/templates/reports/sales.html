@@ -1,0 +1,95 @@
+{% extends "app.html" %}
+{% block title %}Analisis Penjualan — {{ app_name }}{% endblock %}
+{% block page_title %}Analisis Penjualan{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Periode</h2>
+    <form class="toolbar" method="get" action="/reports/sales">
+      <input type="date" name="dari" value="{{ dari }}">
+      <input type="date" name="sampai" value="{{ sampai }}">
+      <select name="kelompok">
+        <option value="hari" {{ 'selected' if kelompok == 'hari' }}>Harian</option>
+        <option value="bulan" {{ 'selected' if kelompok == 'bulan' }}>Bulanan</option>
+      </select>
+      <button class="btn" type="submit">Terapkan</button>
+      <a class="btn small" href="/reports/export/penjualan-harian?dari={{ dari }}&sampai={{ sampai }}&format=csv">CSV Penjualan</a>
+      <a class="btn small primary" href="/reports/export/penjualan-item?dari={{ dari }}&sampai={{ sampai }}&format=xlsx">Excel per Item</a>
+    </form>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="lbl">Total Penjualan</div>
+      <div class="val">{{ total | rupiah }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="lbl">Jumlah Faktur</div>
+      <div class="val">{{ jumlah_faktur }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="lbl">Rata-rata per Faktur</div>
+      <div class="val">{{ (total / jumlah_faktur if jumlah_faktur else 0) | rupiah }}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Periode ({{ LABEL_KELOMPOK[kelompok] }})</th><th class="num">Faktur</th><th class="num">Total</th></tr></thead>
+    <tbody>
+      {% for b in periode %}
+      <tr>
+        <td>{{ b.periode }}</td>
+        <td class="num">{{ b.jumlah }}</td>
+        <td class="num">{{ b.total | rupiah }}</td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="3">Belum ada penjualan pada periode ini.</td></tr>
+      {% endfor %}
+      <tr>
+        <td><strong>Total</strong></td>
+        <td class="num"><strong>{{ jumlah_faktur }}</strong></td>
+        <td class="num"><strong>{{ total | rupiah }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <div class="panel-head"><h2>Penjualan per Item</h2></div>
+    <table>
+      <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Nilai</th></tr></thead>
+      <tbody>
+        {% for b in per_item %}
+        <tr>
+          <td><strong>{{ b.nama }}</strong><div class="muted" style="font-size:11.5px">{{ b.sku }}</div></td>
+          <td class="num">{{ b.qty | qty }} {{ b.satuan }}</td>
+          <td class="num">{{ b.total | rupiah }}</td>
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="3">Belum ada item terjual.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Penjualan per Pelanggan</h2></div>
+    <table>
+      <thead><tr><th>Pelanggan</th><th class="num">Faktur</th><th class="num">Nilai</th></tr></thead>
+      <tbody>
+        {% for b in per_pelanggan %}
+        <tr>
+          <td><strong>{{ b.nama }}</strong><div class="muted" style="font-size:11.5px">{{ b.kode }}</div></td>
+          <td class="num">{{ b.jumlah }}</td>
+          <td class="num">{{ b.total | rupiah }}</td>
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="3">Belum ada penjualan.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

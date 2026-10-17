@@ -1,0 +1,63 @@
+{% extends "app.html" %}
+{% block title %}{{ 'Item Baru' if is_new else 'Ubah Item' }} — {{ app_name }}{% endblock %}
+{% block page_title %}{{ 'Item Baru' if is_new else 'Ubah Item' }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <form method="post" action="{{ '/master/items' if is_new else '/master/items/' ~ item.id }}">
+    <div class="form-grid">
+      <div>
+        <label>SKU</label>
+        <input type="text" name="sku" required value="{{ item.sku if item else '' }}" placeholder="RPT-001">
+      </div>
+      <div>
+        <label>Nama</label>
+        <input type="text" name="nama" required value="{{ item.nama if item else '' }}">
+      </div>
+      <div>
+        <label>Tipe</label>
+        <select name="tipe">
+          {% set t = item.tipe if item else 'produk' %}
+          <option value="produk" {{ 'selected' if t == 'produk' }}>Produk</option>
+          <option value="jasa" {{ 'selected' if t == 'jasa' }}>Jasa</option>
+        </select>
+      </div>
+      <div>
+        <label>Satuan</label>
+        <input type="text" name="satuan" value="{{ item.satuan if item else 'pcs' }}">
+      </div>
+      <div>
+        <label>Harga Beli</label>
+        <input type="number" step="0.01" min="0" name="harga_beli" value="{{ item.harga_beli if item else '0' }}">
+      </div>
+      <div>
+        <label>Harga Jual</label>
+        <input type="number" step="0.01" min="0" name="harga_jual" value="{{ item.harga_jual if item else '0' }}">
+      </div>
+      <div>
+        <label>Berat (kg)</label>
+        <input type="number" step="0.001" min="0" name="berat_kg" value="{{ item.berat_kg if item and item.berat_kg is not none else '0' }}">
+      </div>
+      <div>
+        <label>Volume (m³)</label>
+        <input type="number" step="0.001" min="0" name="volume_m3" value="{{ item.volume_m3 if item and item.volume_m3 is not none else '0' }}">
+      </div>
+      <div>
+        <label>Stok Minimum</label>
+        <input type="number" step="0.001" min="0" name="stok_minimum" value="{{ item.stok_minimum if item else '0' }}">
+      </div>
+      <div class="full">
+        <label>Deskripsi</label>
+        <textarea name="deskripsi" rows="2">{{ item.deskripsi or '' if item else '' }}</textarea>
+      </div>
+      <div class="full">
+        <label class="check"><input type="checkbox" name="is_active" value="1" {{ 'checked' if not item or item.is_active }}> Aktif</label>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Simpan</button>
+      <a class="btn" href="/master/items">Batal</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "app.html" %}
+{% block title %}{{ route.number }} — {{ app_name }}{% endblock %}
+{% block page_title %}Rute {{ route.number }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Informasi Rute</h2>
+    <a class="btn" href="/logistics/routes">Kembali</a>
+  </div>
+  <div class="detail-grid">
+    <div class="item"><div class="lbl">Nomor</div><div class="val"><strong>{{ route.number }}</strong></div></div>
+    <div class="item"><div class="lbl">Nama</div><div class="val">{{ route.nama }}</div></div>
+    <div class="item"><div class="lbl">Tanggal</div><div class="val">{{ route.tanggal | tanggal_id }}</div></div>
+    <div class="item"><div class="lbl">Armada</div><div class="val">{{ route.vehicle.nama if route.vehicle else '—' }}</div></div>
+    <div class="item"><div class="lbl">Status</div><div class="val"><span class="badge {{ route.status }}">{{ {'draft':'Draft','berjalan':'Berjalan','selesai':'Selesai'}[route.status] }}</span></div></div>
+    <div class="item"><div class="lbl">Total Jarak</div><div class="val">{{ load.total_jarak_km | qty }} km</div></div>
+    <div class="item"><div class="lbl">Total Berat</div><div class="val">{{ load.total_berat_kg | qty }} kg</div></div>
+    <div class="item"><div class="lbl">Total Volume</div><div class="val">{{ load.total_volume_m3 | qty }} m³</div></div>
+  </div>
+
+  <table>
+    <thead><tr><th>#</th><th>Alamat</th><th>Pengiriman</th><th class="num">Jarak</th><th>Status</th><th class="aksi">Aksi</th></tr></thead>
+    <tbody>
+      {% for s in route.stops %}
+      <tr>
+        <td>{{ s.urutan }}</td>
+        <td>{{ s.alamat }}{% if s.catatan %}<div class="muted">{{ s.catatan }}</div>{% endif %}</td>
+        <td>{% if s.shipment %}<a href="/logistics/shipments/{{ s.shipment.id }}">{{ s.shipment.number }}</a>{% else %}—{% endif %}</td>
+        <td class="num">{{ s.jarak_km | qty }} km</td>
+        <td><span class="badge {{ s.status }}">{{ {'pending':'Menunggu','tiba':'Tiba','batal':'Batal'}[s.status] }}</span></td>
+        <td class="aksi">
+          {% if s.status == 'pending' %}
+          <form method="post" action="/logistics/stops/{{ s.id }}/status" style="display:inline">
+            <input type="hidden" name="status" value="tiba">
+            <button class="btn small primary" type="submit">Tandai Tiba</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="6">Belum ada titik berhenti.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h2>Tambah Titik Berhenti</h2>
+  <form method="post" action="/logistics/routes/{{ route.id }}/stops">
+    <div class="form-grid">
+      <div class="full"><label>Alamat</label><input type="text" name="alamat" required></div>
+      <div>
+        <label>Kaitkan Pengiriman</label>
+        <select name="shipment_id">
+          <option value="">— tanpa pengiriman —</option>
+          {% for sh in shipments %}<option value="{{ sh.id }}">{{ sh.number }} · {{ sh.customer.nama }}</option>{% endfor %}
+        </select>
+      </div>
+      <div><label>Jarak (km)</label><input type="text" name="jarak_km" value="0"></div>
+      <div class="full"><label>Catatan</label><input type="text" name="catatan" placeholder="opsional"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Tambah Titik</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

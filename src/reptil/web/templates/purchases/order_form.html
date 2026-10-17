@@ -1,0 +1,104 @@
+{% extends "app.html" %}
+{% block title %}PO Baru — {{ app_name }}{% endblock %}
+{% block page_title %}Pesanan Pembelian Baru{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <form method="post" action="/purchases/orders" id="form-po">
+    <div class="form-grid">
+      <div>
+        <label>Pemasok</label>
+        <select name="supplier_id" required>
+          <option value="">— pilih pemasok —</option>
+          {% for p in suppliers %}
+            <option value="{{ p.id }}">{{ p.kode }} — {{ p.nama }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Gudang Penerima</label>
+        <select name="warehouse_id" required>
+          {% for w in warehouses %}
+            <option value="{{ w.id }}" {{ 'selected' if w.is_default }}>{{ w.nama }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Tanggal</label>
+        <input type="date" name="tanggal" value="{{ today }}" required>
+      </div>
+      <div class="full">
+        <label>Catatan</label>
+        <input type="text" name="catatan" placeholder="opsional">
+      </div>
+    </div>
+
+    <h2 style="font-size:14px;margin:22px 0 8px">Baris Item</h2>
+    <table class="lines-table">
+      <thead>
+        <tr><th style="width:45%">Item</th><th style="width:12%">Qty</th><th style="width:20%">Harga</th><th style="width:18%" class="num">Subtotal</th><th></th></tr>
+      </thead>
+      <tbody id="baris"></tbody>
+    </table>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn small" type="button" onclick="tambahBaris()">+ Tambah Baris</button>
+    </div>
+
+    <div class="total-bar">Total <span class="nilai" id="total">Rp 0</span></div>
+
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Simpan PO</button>
+      <a class="btn" href="/purchases/orders">Batal</a>
+    </div>
+  </form>
+</div>
+
+<template id="baris-template">
+  <tr>
+    <td>
+      <select name="item_id" onchange="isiHarga(this)">
+        <option value="">— pilih item —</option>
+        {% for i in items %}
+          <option value="{{ i.id }}" data-harga="{{ i.harga_beli }}">{{ i.sku }} — {{ i.nama }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td><input type="number" name="qty" step="0.001" min="0.001" value="1" oninput="hitung()"></td>
+    <td><input type="number" name="harga" step="0.01" min="0" value="0" oninput="hitung()"></td>
+    <td class="subtotal">0</td>
+    <td><button class="btn small danger" type="button" onclick="this.closest('tr').remove(); hitung();">×</button></td>
+  </tr>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const fmt = n => "Rp " + n.toLocaleString("id-ID", {minimumFractionDigits: 0, maximumFractionDigits: 2});
+
+function tambahBaris() {
+  const tpl = document.getElementById("baris-template");
+  document.getElementById("baris").appendChild(tpl.content.cloneNode(true));
+}
+
+function isiHarga(select) {
+  const tr = select.closest("tr");
+  const harga = select.selectedOptions[0]?.dataset.harga;
+  if (harga) tr.querySelector('input[name=harga]').value = harga;
+  hitung();
+}
+
+function hitung() {
+  let total = 0;
+  document.querySelectorAll("#baris tr").forEach(tr => {
+    const qty = parseFloat(tr.querySelector('input[name=qty]').value) || 0;
+    const harga = parseFloat(tr.querySelector('input[name=harga]').value) || 0;
+    const sub = qty * harga;
+    tr.querySelector(".subtotal").textContent = fmt(sub);
+    total += sub;
+  });
+  document.getElementById("total").textContent = fmt(total);
+}
+
+tambahBaris();
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "app.html" %}
+{% block title %}Rute — {{ app_name }}{% endblock %}
+{% block page_title %}Rute Pengiriman{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Rute</h2>
+    <form class="toolbar" method="get" action="/logistics/routes">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nama / nomor…">
+      <select name="status">
+        <option value="">Semua status</option>
+        <option value="draft" {{ 'selected' if status == 'draft' }}>Draft</option>
+        <option value="berjalan" {{ 'selected' if status == 'berjalan' }}>Berjalan</option>
+        <option value="selesai" {{ 'selected' if status == 'selesai' }}>Selesai</option>
+      </select>
+      <button class="btn" type="submit">Filter</button>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Nomor</th><th>Nama</th><th>Tanggal</th><th>Armada</th><th class="num">Titik</th><th>Status</th><th class="aksi">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for r in routes %}
+      <tr>
+        <td><a href="/logistics/routes/{{ r.id }}"><strong>{{ r.number }}</strong></a></td>
+        <td>{{ r.nama }}</td>
+        <td>{{ r.tanggal | tanggal_id }}</td>
+        <td>{{ r.vehicle.nama if r.vehicle else '—' }}</td>
+        <td class="num">{{ r.stops | length }}</td>
+        <td><span class="badge {{ r.status }}">{{ {'draft':'Draft','berjalan':'Berjalan','selesai':'Selesai'}[r.status] }}</span></td>
+        <td class="aksi"><a class="btn small" href="/logistics/routes/{{ r.id }}">Detail</a></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="7">Belum ada rute.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+
+<div class="panel">
+  <h2>Tambah Rute</h2>
+  <form method="post" action="/logistics/routes">
+    <div class="form-grid">
+      <div><label>Nama Rute</label><input type="text" name="nama" placeholder="mis. Rute Bandung Utara" required></div>
+      <div><label>Tanggal</label><input type="date" name="tanggal" value="{{ today }}" required></div>
+      <div>
+        <label>Armada</label>
+        <select name="vehicle_id">
+          <option value="">— pilih armada —</option>
+          {% for v in vehicles %}<option value="{{ v.id }}">{{ v.nama }}{% if v.plat %} ({{ v.plat }}){% endif %}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>Status</label>
+        <select name="status">
+          <option value="draft">Draft</option>
+          <option value="berjalan">Berjalan</option>
+          <option value="selesai">Selesai</option>
+        </select>
+      </div>
+      <div class="full"><label>Catatan</label><input type="text" name="catatan" placeholder="opsional"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Tambah Rute</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

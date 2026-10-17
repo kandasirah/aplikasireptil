@@ -1,0 +1,52 @@
+{% extends "app.html" %}
+{% block title %}Pembayaran — {{ app_name }}{% endblock %}
+{% block page_title %}Pembayaran &amp; Penerimaan{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Pembayaran</h2>
+    <form class="toolbar" method="get" action="/finance/payments">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nomor / referensi…">
+      <select name="arah">
+        <option value="">Semua arah</option>
+        <option value="keluar" {{ 'selected' if arah == 'keluar' }}>Pembayaran (keluar)</option>
+        <option value="masuk" {{ 'selected' if arah == 'masuk' }}>Penerimaan (masuk)</option>
+      </select>
+      <button class="btn" type="submit">Filter</button>
+      <a class="btn primary" href="/finance/payments/new">Catat Baru</a>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Nomor</th><th>Tanggal</th><th>Arah</th><th>Pihak</th><th>Akun</th>
+          <th>Metode</th><th>Faktur</th><th class="num">Jumlah</th></tr>
+    </thead>
+    <tbody>
+      {% for p in payments %}
+      <tr>
+        <td><a href="/finance/payments/{{ p.id }}">{{ p.number }}</a></td>
+        <td>{{ p.tanggal | tanggal_id }}</td>
+        <td>
+          <span class="badge {{ 'on' if p.arah == 'masuk' else 'draft' }}">{{ LABEL_ARAH[p.arah] }}</span>
+        </td>
+        <td>{{ p.partner.nama }}</td>
+        <td>{{ p.akun.kode }} · {{ p.akun.nama }}</td>
+        <td>{{ p.metode }}{% if p.referensi %} · {{ p.referensi }}{% endif %}</td>
+        <td>
+          {% for a in p.allocations %}{{ a.nomor_faktur or '—' }}{% endfor %}
+        </td>
+        <td class="num"><strong>{{ p.jumlah | rupiah }}</strong></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="8">Belum ada pembayaran. Catat lewat tombol <strong>Catat Baru</strong> atau dari daftar utang/piutang.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "app.html" %}
+{% block title %}Nilai Persediaan — {{ app_name }}{% endblock %}
+{% block page_title %}Nilai Persediaan{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Posisi Terkini</h2>
+    <div class="toolbar">
+      <a class="btn small" href="/reports/export/stok?format=csv">CSV</a>
+      <a class="btn small primary" href="/reports/export/stok?format=xlsx">Excel</a>
+      <a class="btn small" href="/reports/export/mutasi?format=xlsx">Excel Mutasi</a>
+      <a class="btn small" href="/inventory/stock">Saldo per Gudang</a>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="lbl">Nilai Persediaan (Harga Beli)</div>
+      <div class="val">{{ persediaan.total_nilai_beli | rupiah }}</div>
+      <div class="sub">{{ persediaan.total_item }} item</div>
+    </div>
+    <div class="stat-card">
+      <div class="lbl">Potensi Nilai Jual</div>
+      <div class="val">{{ persediaan.total_nilai_jual | rupiah }}</div>
+      <div class="sub">selisih {{ (persediaan.total_nilai_jual - persediaan.total_nilai_beli) | rupiah }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="lbl">Item di Bawah Minimum</div>
+      <div class="val">{{ persediaan.item_minimum }}</div>
+      <div class="sub">perlu restock</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>SKU</th><th>Item</th><th class="num">Saldo</th><th>Satuan</th>
+        <th class="num">Harga Beli</th><th class="num">Nilai Beli</th>
+        <th class="num">Harga Jual</th><th class="num">Nilai Jual</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in persediaan.baris %}
+      <tr>
+        <td>{{ b.item.sku }}</td>
+        <td><strong>{{ b.item.nama }}</strong></td>
+        <td class="num">{{ b.qty | qty }}</td>
+        <td>{{ b.item.satuan }}</td>
+        <td class="num">{{ b.harga_beli | rupiah }}</td>
+        <td class="num">{{ b.nilai_beli | rupiah }}</td>
+        <td class="num">{{ b.harga_jual | rupiah }}</td>
+        <td class="num">{{ b.nilai_jual | rupiah }}</td>
+        <td>
+          {% if b.di_bawah_minimum %}
+            <span class="badge unpaid">Di bawah minimum</span>
+          {% else %}
+            <span class="badge on">Aman</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="9">Belum ada item.</td></tr>
+      {% endfor %}
+      <tr>
+        <td colspan="5"><strong>Total</strong></td>
+        <td class="num"><strong>{{ persediaan.total_nilai_beli | rupiah }}</strong></td>
+        <td></td>
+        <td class="num"><strong>{{ persediaan.total_nilai_jual | rupiah }}</strong></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="muted" style="font-size:12px;margin-top:10px">
+    Saldo dihitung dari seluruh mutasi stok (semua gudang) dan dinilai dengan harga beli item saat ini.
+  </div>
+</div>
+{% endblock %}

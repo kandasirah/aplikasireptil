@@ -1,0 +1,61 @@
+{% extends "app.html" %}
+{% block title %}Peran & Izin — {{ app_name }}{% endblock %}
+{% block page_title %}Peran &amp; Hak Akses{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Peran</h2>
+    <form class="toolbar" method="get" action="/peran">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nama / keterangan…">
+      <button class="btn" type="submit">Cari</button>
+      {% if is_superadmin or 'roles.write' in izin %}
+      <a class="btn primary" href="/peran/baru">+ Peran Baru</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Peran</th><th>Akses</th><th class="num">Pengguna</th><th class="aksi">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for p in peran %}
+      <tr>
+        <td>
+          <strong>{{ p.role.name }}</strong>
+          {% if p.role.description %}<div class="muted">{{ p.role.description }}</div>{% endif %}
+        </td>
+        <td>
+          {% if p.akses_penuh %}
+            <span class="chip strong">Akses penuh</span>
+          {% else %}
+            <span class="chip">{{ p.jumlah_izin }} izin</span>
+          {% endif %}
+        </td>
+        <td class="num">{{ p.jumlah_pengguna }}</td>
+        <td class="aksi">
+          {% if is_superadmin or 'roles.write' in izin %}
+          <a class="btn small" href="/peran/{{ p.role.id }}/ubah">Ubah</a>
+          {% if p.jumlah_pengguna == 0 %}
+          <form method="post" action="/peran/{{ p.role.id }}/hapus" style="display:inline"
+                onsubmit="return confirm('Hapus peran {{ p.role.name }}?')">
+            <button class="btn small danger" type="submit">Hapus</button>
+          </form>
+          {% endif %}
+          {% else %}
+          <span class="muted">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="4">Belum ada peran. Klik <strong>+ Peran Baru</strong> untuk membuatnya.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

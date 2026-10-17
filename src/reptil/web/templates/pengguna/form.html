@@ -1,0 +1,69 @@
+{% extends "app.html" %}
+{% set is_new = edit_user is none %}
+{% block title %}{{ 'Pengguna Baru' if is_new else 'Ubah Pengguna' }} — {{ app_name }}{% endblock %}
+{% block page_title %}{{ 'Pengguna Baru' if is_new else 'Ubah Pengguna' }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <form method="post" action="{{ '/pengguna' if is_new else '/pengguna/' ~ edit_user.id }}">
+    <div class="form-grid">
+      <div>
+        <label>Nama Lengkap</label>
+        <input type="text" name="full_name" required value="{{ edit_user.full_name if edit_user else '' }}">
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" name="email" required value="{{ edit_user.email if edit_user else '' }}" placeholder="nama@perusahaan.co.id">
+      </div>
+      <div class="full">
+        <label>{{ 'Kata Sandi' if is_new else 'Kata Sandi Baru (biarkan kosong bila tidak diubah)' }}</label>
+        <input type="password" name="password" {{ 'required' if is_new }} minlength="8" autocomplete="new-password" placeholder="minimal 8 karakter">
+      </div>
+    </div>
+
+    <div style="margin-top:16px">
+      <label class="check">
+        <input type="checkbox" name="is_active" value="1" {{ 'checked' if is_new or edit_user.is_active }}>
+        Akun aktif (boleh login)
+      </label>
+    </div>
+
+    <h3 style="margin:22px 0 4px">Peran</h3>
+    <p class="muted" style="margin:0 0 10px">Centang satu atau beberapa peran. Izin gabungan dari semua peran yang dicentang.</p>
+    <div class="peran-grid">
+      {% for r in peran %}
+      <label class="check">
+        <input type="checkbox" name="role_ids" value="{{ r.id }}"
+          {{ 'checked' if edit_user and r in edit_user.roles }}>
+        <span>
+          <strong>{{ r.name }}</strong>
+          {% if r.description %}<div class="muted">{{ r.description }}</div>{% endif %}
+        </span>
+      </label>
+      {% else %}
+      <div class="muted">Belum ada peran. <a href="/peran/baru">Buat peran lebih dulu</a>.</div>
+      {% endfor %}
+    </div>
+
+    {% if not is_new %}
+    <h3 style="margin:22px 0 8px">Izin Efektif</h3>
+    <div class="izin-efektif">
+      {% if wildcard %}
+        <span class="chip strong">Akses penuh (semua menu)</span>
+      {% elif izin_user %}
+        {% for kode, label in izin_user %}
+          <span class="chip" title="{{ kode }}">{{ label }}</span>
+        {% endfor %}
+      {% else %}
+        <span class="muted">Belum punya izin apa pun.</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="btn-row" style="margin-top:22px">
+      <button class="btn primary" type="submit">Simpan</button>
+      <a class="btn" href="/pengguna">Batal</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

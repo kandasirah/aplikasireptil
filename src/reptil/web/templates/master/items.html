@@ -1,0 +1,57 @@
+{% extends "app.html" %}
+{% block title %}Item — {{ app_name }}{% endblock %}
+{% block page_title %}Item{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Item</h2>
+    <form class="toolbar" method="get" action="/master/items">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nama / SKU…">
+      <select name="tipe">
+        <option value="">Semua tipe</option>
+        <option value="produk" {{ 'selected' if tipe == 'produk' }}>Produk</option>
+        <option value="jasa" {{ 'selected' if tipe == 'jasa' }}>Jasa</option>
+      </select>
+      <select name="status">
+        <option value="">Semua status</option>
+        <option value="aktif" {{ 'selected' if status == 'aktif' }}>Aktif</option>
+        <option value="nonaktif" {{ 'selected' if status == 'nonaktif' }}>Nonaktif</option>
+      </select>
+      <button class="btn" type="submit">Cari</button>
+      <a class="btn primary" href="/master/items/new">+ Item Baru</a>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>SKU</th><th>Nama</th><th>Tipe</th><th>Satuan</th>
+        <th class="num">Harga Beli</th><th class="num">Harga Jual</th><th>Status</th><th class="aksi">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in items %}
+      <tr>
+        <td>{{ i.sku }}</td>
+        <td><strong>{{ i.nama }}</strong>
+          {% if i.berat_kg %}<div class="muted">{{ '%g' % i.berat_kg }} kg · {{ '%g' % (i.volume_m3 or 0) }} m³</div>{% endif %}
+        </td>
+        <td>{{ 'Produk' if i.tipe == 'produk' else 'Jasa' }}</td>
+        <td>{{ i.satuan }}</td>
+        <td class="num">{{ i.harga_beli | rupiah }}</td>
+        <td class="num">{{ i.harga_jual | rupiah }}</td>
+        <td><span class="badge {{ 'on' if i.is_active else 'off' }}">{{ 'Aktif' if i.is_active else 'Nonaktif' }}</span></td>
+        <td class="aksi"><a class="btn small" href="/master/items/{{ i.id }}/edit">Ubah</a></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="8">Belum ada item.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

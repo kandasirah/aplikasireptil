@@ -1,0 +1,32 @@
+{% extends "app.html" %}
+{% block title %}{{ 'Gudang Baru' if is_new else 'Ubah Gudang' }} — {{ app_name }}{% endblock %}
+{% block page_title %}{{ 'Gudang Baru' if is_new else 'Ubah Gudang' }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <form method="post" action="{{ '/master/warehouses' if is_new else '/master/warehouses/' ~ warehouse.id }}">
+    <div class="form-grid">
+      <div>
+        <label>Kode</label>
+        <input type="text" name="kode" required value="{{ warehouse.kode if warehouse else '' }}" placeholder="GDG-01">
+      </div>
+      <div>
+        <label>Nama</label>
+        <input type="text" name="nama" required value="{{ warehouse.nama if warehouse else '' }}">
+      </div>
+      <div class="full">
+        <label>Alamat</label>
+        <textarea name="alamat" rows="2">{{ warehouse.alamat or '' if warehouse else '' }}</textarea>
+      </div>
+      <div class="full">
+        <label class="check"><input type="checkbox" name="is_default" value="1" {{ 'checked' if warehouse and warehouse.is_default }}> Jadikan gudang utama</label>
+        <label class="check" style="margin-top:8px"><input type="checkbox" name="is_active" value="1" {{ 'checked' if not warehouse or warehouse.is_active }}> Aktif</label>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Simpan</button>
+      <a class="btn" href="/master/warehouses">Batal</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

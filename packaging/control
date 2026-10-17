@@ -1,0 +1,21 @@
+Package: reptil
+Version: 0.1.0-1
+Architecture: amd64
+Section: web
+Priority: optional
+Maintainer: REPTIL <dev@reptil.co.id>
+Depends: python3 (>= 3.12), python3 (<< 3.13), adduser, libc6, init-system-helpers (>= 1.18)
+Recommends: ca-certificates
+Suggests: postgresql-16 | postgresql, postgresql-client, pgadmin4
+Installed-Size: 0
+Description: Integrated business operations platform (REPTIL)
+ Platform operasi bisnis terintegrasi (master data, inventory, purchasing,
+ sales, finance, reporting) berbasis FastAPI yang berjalan di dalam virtualenv
+ Python terpisah pada /opt/reptil/venv.
+ .
+ Paket ini HANYA berisi aplikasi. PostgreSQL dan pgAdmin sengaja TIDAK dipasang
+ maupun dibundel oleh paket ini; keduanya dipasang terpisah. Aplikasi diarahkan
+ ke instance PostgreSQL yang sudah ada melalui berkas /etc/reptil/reptil.env.
+ .
+ Setelah instalasi: sunting /etc/reptil/reptil.env, lalu jalankan
+ "reptil-migrate" dan "systemctl restart reptil".

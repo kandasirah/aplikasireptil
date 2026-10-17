@@ -1,0 +1,52 @@
+{% extends "app.html" %}
+{% block title %}{{ 'Partner Baru' if is_new else 'Ubah Partner' }} — {{ app_name }}{% endblock %}
+{% block page_title %}{{ 'Partner Baru' if is_new else 'Ubah Partner' }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <form method="post" action="{{ '/master/partners' if is_new else '/master/partners/' ~ partner.id }}">
+    <div class="form-grid">
+      <div>
+        <label>Kode</label>
+        <input type="text" name="kode" required value="{{ partner.kode if partner else '' }}" placeholder="C-001">
+      </div>
+      <div>
+        <label>Nama</label>
+        <input type="text" name="nama" required value="{{ partner.nama if partner else '' }}" placeholder="PT Contoh Sejahtera">
+      </div>
+      <div>
+        <label>Tipe</label>
+        <select name="tipe">
+          {% set t = partner.tipe if partner else 'customer' %}
+          <option value="customer" {{ 'selected' if t == 'customer' }}>Pelanggan</option>
+          <option value="supplier" {{ 'selected' if t == 'supplier' }}>Pemasok</option>
+          <option value="both" {{ 'selected' if t == 'both' }}>Pelanggan &amp; Pemasok</option>
+        </select>
+      </div>
+      <div>
+        <label>NPWP</label>
+        <input type="text" name="npwp" value="{{ partner.npwp or '' if partner else '' }}">
+      </div>
+      <div>
+        <label>Telepon</label>
+        <input type="text" name="telepon" value="{{ partner.telepon or '' if partner else '' }}">
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" name="email" value="{{ partner.email or '' if partner else '' }}">
+      </div>
+      <div class="full">
+        <label>Alamat</label>
+        <textarea name="alamat" rows="2">{{ partner.alamat or '' if partner else '' }}</textarea>
+      </div>
+      <div class="full">
+        <label class="check"><input type="checkbox" name="is_active" value="1" {{ 'checked' if not partner or partner.is_active }}> Aktif</label>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Simpan</button>
+      <a class="btn" href="/master/partners">Batal</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

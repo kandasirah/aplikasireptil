@@ -1,0 +1,84 @@
+{% extends "app.html" %}
+{% block title %}{{ shipment.number }} — {{ app_name }}{% endblock %}
+{% block page_title %}Pengiriman {{ shipment.number }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Informasi Pengiriman</h2>
+    <div class="btn-row">
+      <a class="btn" href="/logistics/shipments">Kembali</a>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="item"><div class="lbl">Nomor</div><div class="val"><strong>{{ shipment.number }}</strong></div></div>
+    <div class="item"><div class="lbl">Status</div><div class="val"><span class="badge {{ shipment.status }}">{{ {'created':'Dibuat','picked_up':'Dijemput','in_transit':'Dalam Perjalanan','delivered':'Terkirim','failed':'Gagal'}[shipment.status] }}</span></div></div>
+    <div class="item"><div class="lbl">Pelanggan</div><div class="val">{{ shipment.customer.nama }}</div></div>
+    <div class="item"><div class="lbl">Pesanan</div><div class="val">{% if shipment.order %}<a href="/sales/orders/{{ shipment.order.id }}">{{ shipment.order.number }}</a>{% else %}—{% endif %}</div></div>
+    <div class="item"><div class="lbl">Gudang Asal</div><div class="val">{{ shipment.warehouse.nama }}</div></div>
+    <div class="item"><div class="lbl">Armada</div><div class="val">{{ shipment.vehicle.nama if shipment.vehicle else '—' }}</div></div>
+    <div class="item"><div class="lbl">Ekspedisi</div><div class="val">{{ shipment.carrier.nama if shipment.carrier else '—' }}</div></div>
+    <div class="item"><div class="lbl">Resi</div><div class="val">{{ shipment.resi or '—' }}</div></div>
+    <div class="item"><div class="lbl">Penerima</div><div class="val">{{ shipment.penerima or '—' }}<div class="muted">{{ shipment.telepon_penerima or '' }}</div></div></div>
+    <div class="item"><div class="lbl">Alamat Kirim</div><div class="val">{{ shipment.alamat_kirim or '—' }}</div></div>
+    <div class="item"><div class="lbl">Total Berat</div><div class="val">{{ shipment.total_berat_kg | qty }} kg</div></div>
+    <div class="item"><div class="lbl">Total Volume</div><div class="val">{{ shipment.total_volume_m3 | qty }} m³</div></div>
+    <div class="item"><div class="lbl">Dikirim</div><div class="val">{{ shipment.shipped_at.strftime('%d/%m/%Y %H:%M') if shipment.shipped_at else '—' }}</div></div>
+    <div class="item"><div class="lbl">Terkirim</div><div class="val">{{ shipment.delivered_at.strftime('%d/%m/%Y %H:%M') if shipment.delivered_at else '—' }}</div></div>
+  </div>
+
+  <table>
+    <thead><tr><th>#</th><th>Item</th><th class="num">Qty</th><th class="num">Berat</th><th class="num">Volume</th></tr></thead>
+    <tbody>
+      {% for l in shipment.lines %}
+      <tr>
+        <td>{{ l.line_no }}</td>
+        <td>{{ l.item.sku }} — {{ l.item.nama }}</td>
+        <td class="num">{{ l.qty | qty }} {{ l.item.satuan }}</td>
+        <td class="num">{{ l.berat_kg | qty }} kg</td>
+        <td class="num">{{ l.volume_m3 | qty }} m³</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h2>Perbarui Status</h2>
+  <form method="post" action="/logistics/shipments/{{ shipment.id }}/status">
+    <div class="form-grid">
+      <div>
+        <label>Status</label>
+        <select name="status" required>
+          {% for st in statuses %}
+          <option value="{{ st }}" {{ 'selected' if st == shipment.status }}>{{ {'created':'Dibuat','picked_up':'Dijemput','in_transit':'Dalam Perjalanan','delivered':'Terkirim','failed':'Gagal'}[st] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="full">
+        <label>Catatan</label>
+        <input type="text" name="note" placeholder="mis. tiba di lokasi, penerima tidak di tempat">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Simpan Status</button>
+    </div>
+  </form>
+</div>
+
+<div class="panel">
+  <h2>Riwayat Pelacakan</h2>
+  <ul class="timeline">
+    {% for h in shipment.history %}
+    <li>
+      <div><span class="badge {{ h.status }}">{{ {'created':'Dibuat','picked_up':'Dijemput','in_transit':'Dalam Perjalanan','delivered':'Terkirim','failed':'Gagal'}[h.status] }}</span></div>
+      <div class="waktu">{{ h.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
+      {% if h.note %}<div>{{ h.note }}</div>{% endif %}
+    </li>
+    {% else %}
+    <li>Belum ada riwayat.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

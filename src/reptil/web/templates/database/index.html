@@ -1,0 +1,209 @@
+{% extends "app.html" %}
+{% block title %}Manajemen Database — {{ app_name }}{% endblock %}
+{% block page_title %}Manajemen Database{% endblock %}
+
+{% block content %}
+{% set kelas_status = {'ok': 'paid', 'peringatan': 'unpaid', 'bahaya': 'cancelled'} %}
+{% set kelas_job = {'menunggu': 'draft', 'berjalan': 'invoiced', 'selesai': 'paid', 'gagal': 'cancelled'} %}
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="lbl">Saldo Kas &amp; Bank</div>
+    <div class="val">{{ ringkas.saldo_kas | rupiah }}</div>
+    <div class="sub">penjualan bulan ini {{ ringkas.penjualan_bulan_ini | rupiah }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="lbl">Piutang Usaha</div>
+    <div class="val">{{ ringkas.total_piutang | rupiah }}</div>
+    <div class="sub">{{ ringkas.jumlah_faktur_piutang }} faktur belum lunas</div>
+  </div>
+  <div class="stat-card">
+    <div class="lbl">Utang Usaha</div>
+    <div class="val">{{ ringkas.total_utang | rupiah }}</div>
+    <div class="sub">{{ ringkas.jumlah_faktur_utang }} faktur belum lunas</div>
+  </div>
+  <div class="stat-card">
+    <div class="lbl">Jumlah Data</div>
+    <div class="val">{{ statistik | sum(attribute='jumlah') }}</div>
+    <div class="sub">baris pada {{ statistik | length }} kelompok data</div>
+  </div>
+</div>
+
+{% if job_aktif %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Proses Sedang Berjalan</h2>
+    <a class="btn primary" href="/database/jobs/{{ job_aktif.id }}">Lihat Progres</a>
+  </div>
+  <p class="muted">{{ label_jenis.get(job_aktif.jenis, job_aktif.jenis) }} — {{ job_aktif.tahap }} ({{ job_aktif.persen }}%).</p>
+</div>
+{% endif %}
+
+<div class="panel">
+  <div class="panel-head"><h2>Pemeriksaan Kesehatan Data</h2></div>
+  <table>
+    <thead><tr><th>Pemeriksaan</th><th>Hasil</th><th class="num">Nilai</th><th>Catatan</th></tr></thead>
+    <tbody>
+      {% for k in kesehatan %}
+      <tr>
+        <td>{{ k.nama }}</td>
+        <td><span class="badge {{ kelas_status.get(k.status, 'draft') }}">{{ k.status }}</span></td>
+        <td class="num">
+          {% if k.nilai is number %}{{ k.nilai | rupiah }}{% else %}{{ k.nilai }}{% endif %}
+        </td>
+        <td class="muted">{{ k.pesan }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Statistik Data</h2></div>
+  <table>
+    <thead><tr><th>Data</th><th class="num">Jumlah</th><th>Dari</th><th>Sampai</th></tr></thead>
+    <tbody>
+      {% for s in statistik %}
+      <tr>
+        <td>{{ s.label }}</td>
+        <td class="num">{{ "{:,}".format(s.jumlah).replace(',', '.') }}</td>
+        <td class="muted">{{ s.dari or '—' }}</td>
+        <td class="muted">{{ s.sampai or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if boleh_ubah %}
+<div class="split">
+  <div class="panel">
+    <div class="panel-head"><h2>Buat Data Demo</h2></div>
+    <form method="post" action="/database/demo">
+      <div class="detail-grid">
+        <label class="item">
+          <div class="lbl">Periode</div>
+          <select name="bulan">
+            {% for nilai, teks in pilihan_bulan %}
+            <option value="{{ nilai }}" {% if nilai == 60 %}selected{% endif %}>{{ teks }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="item">
+          <div class="lbl">Kepadatan</div>
+          <select name="per_bulan">
+            {% for nilai, teks in pilihan_kepadatan %}
+            <option value="{{ nilai }}" {% if nilai == 12 %}selected{% endif %}>{{ teks }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="item">
+          <div class="lbl">Skala transaksi</div>
+          <select name="skala">
+            {% for nilai, teks in pilihan_skala %}
+            <option value="{{ nilai }}" {% if nilai == '1' %}selected{% endif %}>{{ teks }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="item">
+          <div class="lbl">Seed (angka acak)</div>
+          <input type="number" name="seed" value="20261017">
+        </label>
+      </div>
+      <p class="muted" style="margin-top:12px">
+        Estimasi 5 tahun / 12 faktur per bulan:
+        ≈ {{ perkiraan.faktur_jual }} faktur penjualan, {{ perkiraan.faktur_beli }} faktur pembelian,
+        {{ perkiraan.pembayaran }} pembayaran, {{ perkiraan.pengiriman }} pengiriman ·
+        ≈ {{ "{:,}".format(perkiraan.perkiraan_baris).replace(',', '.') }} baris.
+      </p>
+      <div class="chips" style="margin:12px 0">
+        <label class="chip"><input type="checkbox" name="bersihkan" value="1" checked> Hapus data transaksi lebih dulu</label>
+        <label class="chip"><input type="checkbox" name="logistik" value="1" checked> Sertakan pengiriman &amp; rute</label>
+      </div>
+      <p class="muted">
+        Data yang dibuat: saldo awal (modal + stok awal), pembelian → penerimaan → faktur,
+        penjualan → pengiriman → faktur, pembayaran sebagian/lunas, jurnal otomatis, dan
+        pengiriman/kurir. Hasilnya sehat: kas positif, stok tidak negatif, jurnal seimbang.
+      </p>
+      <div class="toolbar" style="margin-top:12px">
+        <input type="text" name="konfirmasi" placeholder="Ketik: {{ frasa_demo }}" autocomplete="off" required>
+        <button class="btn primary" type="submit">Buat Data Demo</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Reset Data</h2></div>
+    <form method="post" action="/database/reset" onsubmit="return confirm('Yakin menghapus data? Tindakan ini tidak bisa dibatalkan.');">
+      {% for mode in ['transaksi', 'master', 'total'] %}
+      {% set p = pratinjau[mode] %}
+      <label class="item" style="display:block;margin-bottom:10px">
+        <div>
+          <input type="radio" name="mode" value="{{ mode }}" {% if mode == 'transaksi' %}checked{% endif %}>
+          <strong>{{ label_mode[mode] }}</strong> — {{ "{:,}".format(p.total).replace(',', '.') }} baris
+        </div>
+        <div class="muted">{{ keterangan_mode[mode] }}</div>
+      </label>
+      {% endfor %}
+      <details style="margin:8px 0 12px">
+        <summary class="muted" style="cursor:pointer">Lihat rincian baris yang akan dihapus</summary>
+        <table style="margin-top:8px">
+          <thead><tr><th>Data</th><th class="num">Transaksi</th><th class="num">+ Master</th></tr></thead>
+          <tbody>
+            {% for b in pratinjau['transaksi'].baris %}
+            <tr>
+              <td>{{ b.label }}</td>
+              <td class="num">{{ b.jumlah }}</td>
+              <td class="num">{{ pratinjau['master'].baris[loop.index0].jumlah }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </details>
+      <div class="toolbar">
+        <input type="text" name="konfirmasi" placeholder="Ketik: {{ frasa_reset }}" autocomplete="off" required>
+        <button class="btn danger" type="submit">Hapus Data</button>
+      </div>
+      <p class="muted" style="margin-top:10px">
+        Disarankan membuat cadangan lebih dulu:
+        <code>pg_dump -h {{ info_db.host }} -p {{ info_db.port }} -U {{ info_db.user }} {{ info_db.nama }} &gt; cadangan.sql</code>
+      </p>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="panel">
+  <div class="panel-head">
+    <h2>Riwayat Proses</h2>
+    <a class="btn" href="/database/jobs">Semua Riwayat</a>
+  </div>
+  {% if pekerjaan %}
+  <table>
+    <thead><tr><th>Waktu</th><th>Jenis</th><th>Status</th><th class="num">Progres</th><th>Keterangan</th></tr></thead>
+    <tbody>
+      {% for j in pekerjaan %}
+      <tr>
+        <td class="muted">{{ j.created_at.strftime('%Y-%m-%d %H:%M') if j.created_at else '—' }}</td>
+        <td>{{ label_jenis.get(j.jenis, j.jenis) }}</td>
+        <td><span class="badge {{ kelas_job.get(j.status, 'draft') }}">{{ label_status.get(j.status, j.status) }}</span></td>
+        <td class="num">{{ j.persen }}%</td>
+        <td><a href="/database/jobs/{{ j.id }}">{{ j.pesan or j.tahap or '—' }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Belum ada riwayat proses.</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Cara Pakai</h2></div>
+  <ol class="muted" style="line-height:1.9;padding-left:18px">
+    <li><strong>Reset Data → Hapus data transaksi</strong> bila ingin menyisakan item, pelanggan, pemasok, dan gudang.</li>
+    <li><strong>Reset Data → Reset awal</strong> bila ingin memulai dari nol (pengguna &amp; pengaturan tetap ada).</li>
+    <li><strong>Buat Data Demo</strong> untuk mengisi riwayat 1–10 tahun yang konsisten dan sehat untuk presentasi.</li>
+    <li>Semua proses berjalan di latar belakang; halaman progres otomatis diperbarui tanpa me-refresh manual.</li>
+  </ol>
+</div>
+{% endblock %}

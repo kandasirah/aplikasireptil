@@ -1,0 +1,58 @@
+{% extends "app.html" %}
+{% block title %}{{ p.number }} — {{ app_name }}{% endblock %}
+{% block page_title %}{{ LABEL_ARAH[p.arah] }} {{ p.number }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Rincian {{ LABEL_ARAH[p.arah] }}</h2>
+    <div class="toolbar">
+      <a class="btn" href="/finance/payments">Daftar</a>
+      <form method="post" action="/finance/payments/{{ p.id }}/hapus"
+            onsubmit="return confirm('Batalkan pembayaran ini? Jurnalnya akan ditandai void.');">
+        <button class="btn" type="submit">Batalkan</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="item"><div class="lbl">Nomor</div><div class="val"><strong>{{ p.number }}</strong></div></div>
+    <div class="item"><div class="lbl">Tanggal</div><div class="val">{{ p.tanggal | tanggal_id }}</div></div>
+    <div class="item"><div class="lbl">Arah</div><div class="val"><span class="badge {{ 'on' if p.arah == 'masuk' else 'draft' }}">{{ LABEL_ARAH[p.arah] }}</span></div></div>
+    <div class="item"><div class="lbl">Pihak</div><div class="val">{{ p.partner.nama }}</div></div>
+    <div class="item"><div class="lbl">Akun</div><div class="val">{{ p.akun.kode }} · {{ p.akun.nama }}</div></div>
+    <div class="item"><div class="lbl">Metode</div><div class="val">{{ p.metode | capitalize }}{% if p.referensi %} · {{ p.referensi }}{% endif %}</div></div>
+    <div class="item"><div class="lbl">Jumlah</div><div class="val"><strong>{{ p.jumlah | rupiah }}</strong></div></div>
+    <div class="item"><div class="lbl">Dicatat</div><div class="val">{{ p.created_at.strftime('%d/%m/%Y %H:%M') }}</div></div>
+  </div>
+
+  {% if p.catatan %}
+  <div class="muted" style="margin-top:12px;font-size:13px">Catatan: {{ p.catatan }}</div>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Alokasi ke Faktur</h2></div>
+  <table>
+    <thead><tr><th>Faktur</th><th>Jenis</th><th>Jatuh Tempo</th><th class="num">Total Faktur</th><th class="num">Dibayar Kini</th></tr></thead>
+    <tbody>
+      {% for a in p.allocations %}
+      <tr>
+        <td>
+          {% set faktur = a.purchase_invoice or a.sales_invoice %}
+          {% if a.purchase_invoice_id %}
+            <a href="/purchases/invoices/{{ a.purchase_invoice_id }}">{{ a.nomor_faktur }}</a>
+          {% else %}
+            <a href="/sales/invoices/{{ a.sales_invoice_id }}">{{ a.nomor_faktur }}</a>
+          {% endif %}
+        </td>
+        <td>{{ 'Faktur pembelian' if a.purchase_invoice_id else 'Faktur penjualan' }}</td>
+        <td>{{ faktur.jatuh_tempo | tanggal_id if faktur and faktur.jatuh_tempo else '—' }}</td>
+        <td class="num">{{ faktur.total | rupiah if faktur else '—' }}</td>
+        <td class="num"><strong>{{ a.jumlah | rupiah }}</strong></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

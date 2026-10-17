@@ -1,0 +1,48 @@
+{% extends "app.html" %}
+{% block title %}Saldo Stok — {{ app_name }}{% endblock %}
+{% block page_title %}Saldo Stok{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Saldo per Gudang</h2>
+    <form class="toolbar" method="get" action="/inventory/stock">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari item / SKU…">
+      <select name="warehouse_id">
+        <option value="">Semua gudang</option>
+        {% for w in warehouses %}
+          <option value="{{ w.id }}" {{ 'selected' if warehouse_id == w.id | string }}>{{ w.nama }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn" type="submit">Filter</button>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>SKU</th><th>Item</th><th>Gudang</th><th class="num">Saldo</th><th>Satuan</th><th>Keterangan</th></tr>
+    </thead>
+    <tbody>
+      {% for s in levels %}
+      <tr>
+        <td>{{ s.sku }}</td>
+        <td><strong>{{ s.nama }}</strong></td>
+        <td>{{ s.warehouse_nama }}</td>
+        <td class="num">{{ s.qty | qty }}</td>
+        <td>{{ s.satuan }}</td>
+        <td>
+          {% if s.di_bawah_minimum %}<span class="badge unpaid">Di bawah minimum ({{ s.stok_minimum | qty }})</span>
+          {% else %}<span class="badge on">Aman</span>{% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="6">Belum ada mutasi stok. Stok masuk saat barang diterima dari pesanan pembelian.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

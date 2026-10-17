@@ -1,0 +1,54 @@
+{% extends "app.html" %}
+{% block title %}Pesanan Pembelian — {{ app_name }}{% endblock %}
+{% block page_title %}Pesanan Pembelian{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar PO</h2>
+    <form class="toolbar" method="get" action="/purchases/orders">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nomor PO…">
+      <select name="status">
+        <option value="">Semua status</option>
+        <option value="draft" {{ 'selected' if status == 'draft' }}>Draft</option>
+        <option value="received" {{ 'selected' if status == 'received' }}>Barang diterima</option>
+        <option value="invoiced" {{ 'selected' if status == 'invoiced' }}>Sudah difakturkan</option>
+      </select>
+      <button class="btn" type="submit">Filter</button>
+      <a class="btn primary" href="/purchases/orders/new">+ PO Baru</a>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Nomor</th><th>Tanggal</th><th>Pemasok</th><th>Gudang</th><th class="num">Total</th><th>Status</th><th class="aksi">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td><a href="/purchases/orders/{{ o.id }}"><strong>{{ o.number }}</strong></a></td>
+        <td>{{ o.tanggal | tanggal_id }}</td>
+        <td>{{ o.supplier.nama }}</td>
+        <td>{{ o.warehouse.nama }}</td>
+        <td class="num">{{ o.total | rupiah }}</td>
+        <td><span class="badge {{ o.status }}">{{ {'draft':'Draft','received':'Diterima','invoiced':'Difakturkan','cancelled':'Batal'}[o.status] }}</span></td>
+        <td class="aksi">
+          <a class="btn small" href="/purchases/orders/{{ o.id }}">Detail</a>
+          {% if o.status == 'draft' %}
+          <form method="post" action="/purchases/orders/{{ o.id }}/receive" style="display:inline">
+            <button class="btn small primary" type="submit">Terima</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="7">Belum ada pesanan pembelian.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

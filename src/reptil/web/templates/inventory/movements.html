@@ -1,0 +1,58 @@
+{% extends "app.html" %}
+{% block title %}Kartu Stok — {{ app_name }}{% endblock %}
+{% block page_title %}Kartu Stok{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Riwayat Mutasi</h2>
+    <form class="toolbar" method="get" action="/inventory/movements">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari no. dokumen / catatan…">
+      <select name="item_id">
+        <option value="">Semua item</option>
+        {% for i in items %}
+          <option value="{{ i.id }}" {{ 'selected' if item_id == i.id | string }}>{{ i.sku }} — {{ i.nama }}</option>
+        {% endfor %}
+      </select>
+      <select name="warehouse_id">
+        <option value="">Semua gudang</option>
+        {% for w in warehouses %}
+          <option value="{{ w.id }}" {{ 'selected' if warehouse_id == w.id | string }}>{{ w.nama }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn" type="submit">Filter</button>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Waktu</th><th>Item</th><th>Gudang</th><th class="num">Qty</th><th>Sumber</th><th>No. Dokumen</th><th>Catatan</th></tr>
+    </thead>
+    <tbody>
+      {% for m in movements %}
+      <tr>
+        <td>{{ m.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+        <td>{{ m.item.sku }} — {{ m.item.nama }}</td>
+        <td>{{ m.warehouse.nama }}</td>
+        <td class="num" style="color:{{ '#14663a' if m.qty > 0 else '#b02a37' }}">
+          {{ '+' if m.qty > 0 }}{{ m.qty | qty }}
+        </td>
+        <td>
+          {% if m.ref_type == 'purchase_receipt' %}Penerimaan barang
+          {% elif m.ref_type == 'sales_delivery' %}Pengiriman
+          {% else %}{{ m.ref_type }}{% endif %}
+        </td>
+        <td>{{ m.ref_number or '—' }}</td>
+        <td class="muted">{{ m.note or '' }}</td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="7">Belum ada mutasi stok.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

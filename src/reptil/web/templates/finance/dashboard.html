@@ -1,0 +1,112 @@
+{% extends "app.html" %}
+{% block title %}Keuangan — {{ app_name }}{% endblock %}
+{% block page_title %}Keuangan{% endblock %}
+
+{% block content %}
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="lbl">Utang Usaha (AP)</div>
+    <div class="val">{{ ringkas.total_utang | rupiah }}</div>
+    <div class="sub">{{ ringkas.jumlah_faktur_utang }} faktur belum lunas</div>
+  </div>
+  <div class="stat-card">
+    <div class="lbl">Piutang Usaha (AR)</div>
+    <div class="val">{{ ringkas.total_piutang | rupiah }}</div>
+    <div class="sub">{{ ringkas.jumlah_faktur_piutang }} faktur belum tertagih</div>
+  </div>
+  <div class="stat-card">
+    <div class="lbl">Saldo Kas &amp; Bank</div>
+    <div class="val">{{ ringkas.saldo_kas | rupiah }}</div>
+    <div class="sub">dari jurnal posted</div>
+  </div>
+  <div class="stat-card">
+    <div class="lbl">Laba Kotor Bulan Ini</div>
+    <div class="val">{{ ringkas.laba_kotor_bulan_ini | rupiah }}</div>
+    <div class="sub">penjualan {{ ringkas.penjualan_bulan_ini | rupiah }} − HPP {{ ringkas.hpp_bulan_ini | rupiah }}</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <h2>Jatuh Tempo 7 Hari ke Depan</h2>
+  </div>
+  <div class="detail-grid">
+    <div class="item">
+      <div class="lbl">Utang akan jatuh tempo</div>
+      <div class="val"><strong>{{ ringkas.utang_jatuh_tempo | rupiah }}</strong></div>
+    </div>
+    <div class="item">
+      <div class="lbl">Piutang akan jatuh tempo</div>
+      <div class="val"><strong>{{ ringkas.piutang_jatuh_tempo | rupiah }}</strong></div>
+    </div>
+    <div class="item">
+      <div class="lbl">Posisi bersih</div>
+      <div class="val"><strong>{{ (ringkas.piutang_jatuh_tempo - ringkas.utang_jatuh_tempo) | rupiah }}</strong></div>
+    </div>
+  </div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Umur Utang</h2>
+      <a class="btn small" href="/finance/payables">Rincian</a>
+    </div>
+    <table>
+      <thead><tr><th>Kelompok</th><th class="num">Faktur</th><th class="num">Nilai</th></tr></thead>
+      <tbody>
+        {% for kunci, label in LABEL_UMUR.items() %}
+        <tr>
+          <td>{{ label }}</td>
+          <td class="num">{{ ringkas.aging_utang[kunci].faktur }}</td>
+          <td class="num">{{ ringkas.aging_utang[kunci].jumlah | rupiah }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Umur Piutang</h2>
+      <a class="btn small" href="/finance/receivables">Rincian</a>
+    </div>
+    <table>
+      <thead><tr><th>Kelompok</th><th class="num">Faktur</th><th class="num">Nilai</th></tr></thead>
+      <tbody>
+        {% for kunci, label in LABEL_UMUR.items() %}
+        <tr>
+          <td>{{ label }}</td>
+          <td class="num">{{ ringkas.aging_piutang[kunci].faktur }}</td>
+          <td class="num">{{ ringkas.aging_piutang[kunci].jumlah | rupiah }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <h2>Pembayaran / Penerimaan Terbaru</h2>
+    <a class="btn small primary" href="/finance/payments/new">Catat Pembayaran</a>
+  </div>
+  <table>
+    <thead><tr><th>Nomor</th><th>Tanggal</th><th>Arah</th><th>Pihak</th><th>Metode</th><th class="num">Jumlah</th></tr></thead>
+    <tbody>
+      {% for p in ringkas.pembayaran_terakhir %}
+      <tr>
+        <td><a href="/finance/payments/{{ p.id }}">{{ p.number }}</a></td>
+        <td>{{ p.tanggal | tanggal_id }}</td>
+        <td><span class="badge {{ 'on' if p.arah == 'masuk' else 'draft' }}">{{ LABEL_ARAH[p.arah] }}</span></td>
+        <td>{{ p.partner.nama }}</td>
+        <td>{{ p.metode }}</td>
+        <td class="num">{{ p.jumlah | rupiah }}</td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="6">Belum ada pembayaran tercatat.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "app.html" %}
+{% block title %}{{ order.number }} — {{ app_name }}{% endblock %}
+{% block page_title %}Pesanan Pembelian {{ order.number }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Informasi PO</h2>
+    <div class="btn-row">
+      {% if order.status == 'draft' %}
+      <form method="post" action="/purchases/orders/{{ order.id }}/receive">
+        <button class="btn primary" type="submit">Terima Barang</button>
+      </form>
+      {% endif %}
+      {% if order.status == 'received' %}
+      <a class="btn" href="#" onclick="document.getElementById('form-faktur').style.display='block'; return false;">Buat Faktur</a>
+      {% endif %}
+      <a class="btn" href="/purchases/orders">Kembali</a>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="item"><div class="lbl">Nomor</div><div class="val"><strong>{{ order.number }}</strong></div></div>
+    <div class="item"><div class="lbl">Tanggal</div><div class="val">{{ order.tanggal | tanggal_id }}</div></div>
+    <div class="item"><div class="lbl">Pemasok</div><div class="val">{{ order.supplier.nama }}</div></div>
+    <div class="item"><div class="lbl">Gudang</div><div class="val">{{ order.warehouse.nama }}</div></div>
+    <div class="item"><div class="lbl">Status</div><div class="val"><span class="badge {{ order.status }}">{{ {'draft':'Draft','received':'Diterima','invoiced':'Difakturkan','cancelled':'Batal'}[order.status] }}</span></div></div>
+    <div class="item"><div class="lbl">Diterima pada</div><div class="val">{{ order.received_at.strftime('%d/%m/%Y %H:%M') if order.received_at else '—' }}</div></div>
+  </div>
+
+  {% if order.invoices %}
+  <div class="alert ok">
+    Faktur terkait:
+    {% for f in order.invoices %}<a href="/purchases/invoices/{{ f.id }}">{{ f.number }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+  </div>
+  {% endif %}
+
+  <table>
+    <thead><tr><th>#</th><th>Item</th><th class="num">Qty</th><th>Satuan</th><th class="num">Harga</th><th class="num">Subtotal</th></tr></thead>
+    <tbody>
+      {% for l in order.lines %}
+      <tr>
+        <td>{{ l.line_no }}</td>
+        <td>{{ l.item.sku }} — {{ l.item.nama }}</td>
+        <td class="num">{{ l.qty | qty }}</td>
+        <td>{{ l.item.satuan }}</td>
+        <td class="num">{{ l.harga | rupiah }}</td>
+        <td class="num">{{ l.subtotal | rupiah }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr><th colspan="5" class="num">Total</th><th class="num">{{ order.total | rupiah }}</th></tr>
+    </tfoot>
+  </table>
+</div>
+
+<div class="panel" id="form-faktur" style="display:none">
+  <h2>Buat Faktur Pembelian</h2>
+  <form method="post" action="/purchases/orders/{{ order.id }}/invoice">
+    <div class="form-grid">
+      <div>
+        <label>Tanggal Faktur</label>
+        <input type="date" name="tanggal" value="{{ today }}" required>
+      </div>
+      <div>
+        <label>Jatuh Tempo</label>
+        <input type="date" name="jatuh_tempo" value="{{ jatuh_tempo_default }}">
+      </div>
+      <div>
+        <label>No. Faktur Pemasok</label>
+        <input type="text" name="supplier_ref" placeholder="opsional">
+      </div>
+      <div class="full">
+        <label>Catatan</label>
+        <input type="text" name="catatan" placeholder="opsional">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Buat Faktur</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "app.html" %}
+{% block title %}Bagan Akun — {{ app_name }}{% endblock %}
+{% block page_title %}Bagan Akun{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Akun</h2>
+    <form class="toolbar" method="get" action="/finance/accounts">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari kode / nama…">
+      <select name="tipe">
+        <option value="">Semua tipe</option>
+        {% for t in TIPE_AKUN %}
+        <option value="{{ t }}" {{ 'selected' if tipe == t }}>{{ LABEL_TIPE_AKUN[t] }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn" type="submit">Filter</button>
+      <a class="btn" href="/finance/trial-balance">Neraca Saldo</a>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Kode</th><th>Nama</th><th>Tipe</th><th>Saldo Normal</th>
+          <th class="num">Debit</th><th class="num">Kredit</th><th class="num">Saldo</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for a in akun %}
+      {% set s = saldo.get(a.id) %}
+      <tr>
+        <td><strong>{{ a.kode }}</strong></td>
+        <td>
+          <form method="post" action="/finance/accounts/{{ a.id }}" id="akun-{{ a.id }}" style="display:inline">
+            <input type="text" name="nama" value="{{ a.nama }}" style="width:230px">
+          </form>
+        </td>
+        <td>{{ LABEL_TIPE_AKUN[a.tipe] }}</td>
+        <td>{{ a.saldo_normal }}</td>
+        <td class="num">{{ s.debit | rupiah if s else '—' }}</td>
+        <td class="num">{{ s.credit | rupiah if s else '—' }}</td>
+        <td class="num"><strong>{{ s.saldo | rupiah if s else '—' }}</strong></td>
+        <td>
+          <span class="badge {{ 'on' if a.aktif else 'cancelled' }}">{{ 'Aktif' if a.aktif else 'Nonaktif' }}</span>
+        </td>
+        <td>
+          <form method="post" action="/finance/accounts/{{ a.id }}" class="toolbar">
+            <input type="hidden" name="nama" value="{{ a.nama }}">
+            {% if a.aktif %}<input type="hidden" name="aktif" value="">
+            {% else %}<input type="hidden" name="aktif" value="1">{% endif %}
+            <button class="btn small" type="submit">{{ 'Nonaktifkan' if a.aktif else 'Aktifkan' }}</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="9">Belum ada akun.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Tambah Akun</h2></div>
+  <form method="post" action="/finance/accounts">
+    <div class="form-grid">
+      <div><label>Kode</label><input type="text" name="kode" required placeholder="mis. 5-200"></div>
+      <div><label>Nama</label><input type="text" name="nama" required placeholder="mis. Beban Gaji"></div>
+      <div>
+        <label>Tipe</label>
+        <select name="tipe">
+          {% for t in TIPE_AKUN %}<option value="{{ t }}">{{ LABEL_TIPE_AKUN[t] }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">Tambah Akun</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

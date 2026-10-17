@@ -1,0 +1,9 @@
+#!/bin/sh
+# REPTIL - terapkan migrasi database (alembic upgrade head).
+set -eu
+
+[ -r /etc/reptil/reptil.env ] && . /etc/reptil/reptil.env
+
+export PYTHONPATH="/opt/reptil/app/src${PYTHONPATH:+:$PYTHONPATH}"
+cd /opt/reptil/app
+exec /opt/reptil/venv/bin/alembic -c /opt/reptil/app/alembic.ini upgrade head "$@"

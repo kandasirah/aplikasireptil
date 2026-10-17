@@ -1,0 +1,40 @@
+{% extends "app.html" %}
+{% block title %}Gudang — {{ app_name }}{% endblock %}
+{% block page_title %}Gudang{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Gudang</h2>
+    <form class="toolbar" method="get" action="/master/warehouses">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nama / kode…">
+      <button class="btn" type="submit">Cari</button>
+      <a class="btn primary" href="/master/warehouses/new">+ Gudang Baru</a>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Kode</th><th>Nama</th><th>Alamat</th><th>Default</th><th>Status</th><th class="aksi">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for w in warehouses %}
+      <tr>
+        <td>{{ w.kode }}</td>
+        <td><strong>{{ w.nama }}</strong></td>
+        <td>{{ w.alamat or '—' }}</td>
+        <td>{% if w.is_default %}<span class="badge on">Utama</span>{% else %}—{% endif %}</td>
+        <td><span class="badge {{ 'on' if w.is_active else 'off' }}">{{ 'Aktif' if w.is_active else 'Nonaktif' }}</span></td>
+        <td class="aksi"><a class="btn small" href="/master/warehouses/{{ w.id }}/edit">Ubah</a></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="6">Belum ada gudang.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

@@ -1,0 +1,9 @@
+#!/bin/sh
+# REPTIL - uji koneksi ke database yang dikonfigurasi.
+set -eu
+
+[ -r /etc/reptil/reptil.env ] && . /etc/reptil/reptil.env
+
+export PYTHONPATH="/opt/reptil/app/src${PYTHONPATH:+:$PYTHONPATH}"
+cd /opt/reptil/app
+exec /opt/reptil/venv/bin/python /opt/reptil/app/scripts/check_db.py "$@"

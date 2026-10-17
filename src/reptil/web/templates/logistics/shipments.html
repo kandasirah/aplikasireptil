@@ -1,0 +1,56 @@
+{% extends "app.html" %}
+{% block title %}Pengiriman — {{ app_name }}{% endblock %}
+{% block page_title %}Pengiriman{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="stat-row">
+  <div class="stat-card"><div class="lbl">Dibuat</div><div class="val">{{ ringkasan.dibuat }}</div></div>
+  <div class="stat-card"><div class="lbl">Dalam Perjalanan</div><div class="val">{{ ringkasan.dalam_perjalanan }}</div></div>
+  <div class="stat-card"><div class="lbl">Terkirim</div><div class="val">{{ ringkasan.terkirim }}</div></div>
+  <div class="stat-card"><div class="lbl">Gagal</div><div class="val">{{ ringkasan.gagal }}</div></div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Surat Jalan</h2>
+    <form class="toolbar" method="get" action="/logistics/shipments">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nomor / resi…">
+      <select name="status">
+        <option value="">Semua status</option>
+        <option value="created" {{ 'selected' if status == 'created' }}>Dibuat</option>
+        <option value="picked_up" {{ 'selected' if status == 'picked_up' }}>Dijemput</option>
+        <option value="in_transit" {{ 'selected' if status == 'in_transit' }}>Dalam Perjalanan</option>
+        <option value="delivered" {{ 'selected' if status == 'delivered' }}>Terkirim</option>
+        <option value="failed" {{ 'selected' if status == 'failed' }}>Gagal</option>
+      </select>
+      <button class="btn" type="submit">Filter</button>
+      <a class="btn primary" href="/logistics/shipments/new">+ Pengiriman Baru</a>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Nomor</th><th>Pelanggan</th><th>Penerima</th><th class="num">Berat</th><th>Status</th><th class="aksi">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for s in shipments %}
+      <tr>
+        <td><a href="/logistics/shipments/{{ s.id }}"><strong>{{ s.number }}</strong></a>
+          {% if s.resi %}<div class="muted">resi {{ s.resi }}</div>{% endif %}</td>
+        <td>{{ s.customer.nama }}</td>
+        <td>{{ s.penerima or '—' }}<div class="muted">{{ s.alamat_kirim or '' }}</div></td>
+        <td class="num">{{ s.total_berat_kg | qty }} kg</td>
+        <td><span class="badge {{ s.status }}">{{ {'created':'Dibuat','picked_up':'Dijemput','in_transit':'Dalam Perjalanan','delivered':'Terkirim','failed':'Gagal'}[s.status] }}</span></td>
+        <td class="aksi"><a class="btn small" href="/logistics/shipments/{{ s.id }}">Detail</a></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="6">Belum ada pengiriman. Klik <strong>+ Pengiriman Baru</strong> untuk membuat dari SO terkirim.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

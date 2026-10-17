@@ -1,0 +1,94 @@
+{% extends "app.html" %}
+{% block title %}Laba Rugi — {{ app_name }}{% endblock %}
+{% block page_title %}Laba Rugi{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Periode</h2>
+    <form class="toolbar" method="get" action="/reports/profit-loss">
+      <input type="date" name="dari" value="{{ dari }}">
+      <input type="date" name="sampai" value="{{ sampai }}">
+      <button class="btn" type="submit">Terapkan</button>
+      <a class="btn small" href="/reports/export/laba-rugi?dari={{ dari }}&sampai={{ sampai }}&format=csv">CSV</a>
+      <a class="btn small primary" href="/reports/export/laba-rugi?dari={{ dari }}&sampai={{ sampai }}&format=xlsx">Excel</a>
+      <a class="btn small" href="/reports/export/jurnal?dari={{ dari }}&sampai={{ sampai }}&format=xlsx">Excel Jurnal</a>
+      <a class="btn small" href="/finance/trial-balance">Neraca Saldo</a>
+    </form>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="lbl">Pendapatan</div>
+      <div class="val">{{ laba_rugi.total_pendapatan | rupiah }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="lbl">Harga Pokok Penjualan</div>
+      <div class="val">{{ hpp | rupiah }}</div>
+      <div class="sub">dari akun HPP di jurnal</div>
+    </div>
+    <div class="stat-card">
+      <div class="lbl">Laba Kotor</div>
+      <div class="val">{{ (laba_rugi.total_pendapatan - hpp) | rupiah }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="lbl">Laba / (Rugi) Bersih</div>
+      <div class="val">{{ laba_rugi.laba | rupiah }}</div>
+      <div class="sub">setelah beban {{ laba_rugi.total_beban | rupiah }}</div>
+    </div>
+  </div>
+
+  <div class="muted" style="font-size:12.5px">
+    Angka diambil dari jurnal berstatus <strong>posted</strong> pada rentang tanggal —
+    jadi tidak ada laporan yang dihitung dengan aturan berbeda dari buku besar.
+  </div>
+</div>
+
+<div class="split">
+  <div class="panel">
+    <div class="panel-head"><h2>Pendapatan</h2></div>
+    <table>
+      <thead><tr><th>Akun</th><th class="num">Nilai</th></tr></thead>
+      <tbody>
+        {% for b in laba_rugi.pendapatan %}
+        <tr>
+          <td>{{ b.akun.kode }} · {{ b.akun.nama }}</td>
+          <td class="num">{{ b.nilai | rupiah }}</td>
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="2">Belum ada pendapatan pada periode ini.</td></tr>
+        {% endfor %}
+        <tr>
+          <td><strong>Total Pendapatan</strong></td>
+          <td class="num"><strong>{{ laba_rugi.total_pendapatan | rupiah }}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h2>Beban</h2></div>
+    <table>
+      <thead><tr><th>Akun</th><th class="num">Nilai</th></tr></thead>
+      <tbody>
+        {% for b in laba_rugi.beban %}
+        <tr>
+          <td>{{ b.akun.kode }} · {{ b.akun.nama }}</td>
+          <td class="num">{{ b.nilai | rupiah }}</td>
+        </tr>
+        {% else %}
+        <tr><td class="empty" colspan="2">Belum ada beban pada periode ini.</td></tr>
+        {% endfor %}
+        <tr>
+          <td><strong>Total Beban</strong></td>
+          <td class="num"><strong>{{ laba_rugi.total_beban | rupiah }}</strong></td>
+        </tr>
+        <tr>
+          <td><strong>Laba / (Rugi) Bersih</strong></td>
+          <td class="num"><strong>{{ laba_rugi.laba | rupiah }}</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

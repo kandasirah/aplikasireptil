@@ -1,0 +1,49 @@
+{% extends "app.html" %}
+{% block title %}Faktur Penjualan — {{ app_name }}{% endblock %}
+{% block page_title %}Faktur Penjualan{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Faktur Penjualan</h2>
+    <form class="toolbar" method="get" action="/sales/invoices">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nomor faktur…">
+      <select name="status">
+        <option value="">Semua status</option>
+        <option value="unpaid" {{ 'selected' if status == 'unpaid' }}>Belum dibayar</option>
+        <option value="partial" {{ 'selected' if status == 'partial' }}>Dibayar sebagian</option>
+        <option value="paid" {{ 'selected' if status == 'paid' }}>Lunas</option>
+      </select>
+      <button class="btn" type="submit">Filter</button>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Nomor</th><th>Tanggal</th><th>Pelanggan</th><th>Ref. SO</th><th class="num">Total</th><th class="num">Sisa</th><th>Status</th><th class="aksi">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for f in invoices %}
+      <tr>
+        <td><a href="/sales/invoices/{{ f.id }}"><strong>{{ f.number }}</strong></a></td>
+        <td>{{ f.tanggal | tanggal_id }}</td>
+        <td>{{ f.customer.nama }}</td>
+        <td>{{ f.order.number if f.order else '—' }}</td>
+        <td class="num">{{ f.total | rupiah }}</td>
+        <td class="num">{{ (sisa.get(f.id, 0)) | rupiah }}</td>
+        <td><span class="badge {{ f.status }}">{{ {'unpaid':'Belum bayar','partial':'Dibayar sebagian','paid':'Lunas','cancelled':'Batal'}.get(f.status, f.status) }}</span></td>
+        <td class="aksi">
+          <a class="btn small" href="/sales/invoices/{{ f.id }}/pdf" target="_blank">PDF</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="8">Belum ada faktur penjualan.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

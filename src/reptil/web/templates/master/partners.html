@@ -1,0 +1,54 @@
+{% extends "app.html" %}
+{% block title %}Partner — {{ app_name }}{% endblock %}
+{% block page_title %}Partner{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Partner</h2>
+    <form class="toolbar" method="get" action="/master/partners">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nama / kode…">
+      <select name="tipe">
+        <option value="">Semua tipe</option>
+        <option value="customer" {{ 'selected' if tipe == 'customer' }}>Pelanggan</option>
+        <option value="supplier" {{ 'selected' if tipe == 'supplier' }}>Pemasok</option>
+        <option value="both" {{ 'selected' if tipe == 'both' }}>Keduanya</option>
+      </select>
+      <button class="btn" type="submit">Cari</button>
+      <a class="btn primary" href="/master/partners/new">+ Partner Baru</a>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Kode</th><th>Nama</th><th>Tipe</th><th>Kontak</th><th>Status</th><th class="aksi">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in partners %}
+      <tr>
+        <td>{{ p.kode }}</td>
+        <td><strong>{{ p.nama }}</strong>{% if p.npwp %}<div class="muted">NPWP {{ p.npwp }}</div>{% endif %}</td>
+        <td>
+          {% if p.tipe == 'customer' %}Pelanggan
+          {% elif p.tipe == 'supplier' %}Pemasok
+          {% else %}Pelanggan &amp; Pemasok{% endif %}
+        </td>
+        <td>{{ p.telepon or '—' }}<div class="muted">{{ p.email or '' }}</div></td>
+        <td><span class="badge {{ 'on' if p.is_active else 'off' }}">{{ 'Aktif' if p.is_active else 'Nonaktif' }}</span></td>
+        <td class="aksi">
+          <a class="btn small" href="/master/partners/{{ p.id }}/edit">Ubah</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="6">Belum ada partner. Klik <strong>+ Partner Baru</strong> untuk menambahkan.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

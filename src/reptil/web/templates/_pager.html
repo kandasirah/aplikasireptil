@@ -1,0 +1,33 @@
+{# Widget paginasi tabel. Pakai: {% import "_pager.html" as pg %} lalu {{ pg.pager(h) }}. #}
+{% macro pager(h) %}
+{% if h and h.total > 0 %}
+<div class="pager">
+  <div class="pager-info">
+    Menampilkan <strong>{{ h.mulai }}–{{ h.sampai }}</strong> dari <strong>{{ h.total }}</strong> data
+  </div>
+  <div class="pager-nav">
+    <a class="pg-btn {{ 'off' if not h.punya_sebelum }}"
+       {% if h.punya_sebelum %}href="{{ h.url(h.page - 1) }}"{% endif %}
+       title="Sebelumnya" aria-label="Sebelumnya">‹</a>
+    {% for n in h.nomor() %}
+      {% if n is none %}
+      <span class="pg-gap">…</span>
+      {% else %}
+      <a class="pg-btn {{ 'active' if n == h.page }}" href="{{ h.url(n) }}">{{ n }}</a>
+      {% endif %}
+    {% endfor %}
+    <a class="pg-btn {{ 'off' if not h.punya_berikut }}"
+       {% if h.punya_berikut %}href="{{ h.url(h.page + 1) }}"{% endif %}
+       title="Berikutnya" aria-label="Berikutnya">›</a>
+  </div>
+  <div class="pager-size">
+    <label>Baris</label>
+    <select onchange="if(this.value) location.href=this.value">
+      {% for p in h.pilihan %}
+      <option value="{{ h.url(1, p) }}" {{ 'selected' if p == h.per_page }}>{{ p }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+{% endif %}
+{% endmacro %}

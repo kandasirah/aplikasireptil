@@ -1,0 +1,31 @@
+[Unit]
+Description=REPTIL - Reliable Enterprise Platform (FastAPI/uvicorn)
+Documentation=file:/usr/share/doc/reptil/README.md
+# Postgres bersifat opsional (dipasang terpisah); jangan jadikan syarat keras.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=reptil
+Group=reptil
+WorkingDirectory=/opt/reptil/app
+# '-' = jangan gagal bila berkas belum ada
+EnvironmentFile=-/etc/reptil/reptil.env
+ExecStart=/opt/reptil/bin/reptil-run
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+
+# Pengerasan dasar
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=reptil
+
+[Install]
+WantedBy=multi-user.target

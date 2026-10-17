@@ -1,0 +1,22 @@
+# Pengabaian lintian atas penyimpangan yang SENGAJA untuk paket internal ini.
+# Dipasang ke /usr/share/lintian/overrides/reptil.
+
+# Aplikasi + virtualenv sengaja diletakkan di /opt (di luar kebijakan Debian).
+reptil binary: dir-or-file-in-opt
+
+# Venv membundel dependensi Python beserta pustaka biner pihak ketiga.
+reptil binary: embedded-library
+reptil binary: unstripped-binary-or-object
+reptil binary: hardening-no-pie
+reptil binary: shared-library-is-executable
+
+# Skrip pihak ketiga di dalam venv.
+reptil binary: unusual-interpreter
+reptil binary: script-not-executable
+
+# systemd selalu tersedia di target; pemanggilan systemctl disengaja
+# dengan fallback ke deb-systemd-invoke/deb-systemd-helper bila ada.
+reptil binary: maintainer-script-calls-systemctl
+
+# Rilis internal (bukan kiriman ke arsip Debian).
+reptil binary: initial-upload-closes-no-bugs

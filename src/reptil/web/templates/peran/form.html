@@ -1,0 +1,117 @@
+{% extends "app.html" %}
+{% set is_new = edit_role is none %}
+{% block title %}{{ 'Peran Baru' if is_new else 'Ubah Peran' }} — {{ app_name }}{% endblock %}
+{% block page_title %}{{ 'Peran Baru' if is_new else 'Ubah Peran' }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <form method="post" action="{{ '/peran' if is_new else '/peran/' ~ edit_role.id }}">
+    <div class="form-grid">
+      <div>
+        <label>Nama Peran</label>
+        <input type="text" name="name" required value="{{ edit_role.name if edit_role else '' }}" placeholder="mis. Admin Gudang">
+      </div>
+      <div class="full">
+        <label>Keterangan</label>
+        <input type="text" name="description" value="{{ edit_role.description if edit_role and edit_role.description else '' }}" placeholder="deskripsi singkat peran (opsional)">
+      </div>
+    </div>
+
+    <div class="akses-penuh">
+      <label class="check">
+        <input type="checkbox" name="akses_penuh" value="1" id="akses_penuh" {{ 'checked' if akses_penuh }}>
+        <span>
+          <strong>Akses penuh (superadmin)</strong>
+          <div class="muted">Boleh mengakses semua menu tanpa perlu mencentang izin satu per satu.</div>
+        </span>
+      </label>
+    </div>
+
+    {% if asing %}
+    <div class="alert" style="margin-top:12px">
+      Ada {{ asing | length }} izin lama yang tidak dikenali sistem:
+      <code>{{ asing | join(', ') }}</code>. Izin tersebut akan dihapus bila peran ini disimpan.
+    </div>
+    {% endif %}
+
+    <div class="izin-head-row">
+      <h3 style="margin:0">Izin per Menu</h3>
+      <div class="btn-row">
+        <button class="btn small" type="button" id="izin-pilih-semua">Centang semua</button>
+        <button class="btn small" type="button" id="izin-kosongkan">Kosongkan</button>
+      </div>
+    </div>
+    <p class="muted" style="margin:4px 0 12px">Centang menu yang boleh diakses peran ini. Kotak “Semua” mencentang seluruh izin dalam satu menu.</p>
+
+    <div class="izin-grid" id="izin-grid">
+      {% for grup in katalog %}
+      <section class="izin-grup">
+        <header class="izin-grup-head">
+          <div>
+            <strong>{{ grup.nama }}</strong>
+            <div class="muted">{{ grup.keterangan }}</div>
+          </div>
+          <label class="check kecil">
+            <input type="checkbox" class="grup-toggle" data-grup="{{ loop.index }}"> Semua
+          </label>
+        </header>
+        <div class="izin-isi">
+          {% for izin in grup.izin %}
+          <label class="check">
+            <input type="checkbox" class="izin-cb" name="permissions" value="{{ izin.code }}"
+              {{ 'checked' if izin.code in terpilih }}>
+            <span>{{ izin.label }} <code class="kode">{{ izin.code }}</code></span>
+          </label>
+          {% endfor %}
+        </div>
+      </section>
+      {% endfor %}
+    </div>
+
+    <div class="btn-row" style="margin-top:22px">
+      <button class="btn primary" type="submit">Simpan</button>
+      <a class="btn" href="/peran">Batal</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const grid = document.getElementById('izin-grid');
+  if (!grid) return;
+  const semua = () => Array.from(grid.querySelectorAll('.izin-cb'));
+  const penuh = document.getElementById('akses_penuh');
+
+  // Tombol "Centang semua" / "Kosongkan"
+  document.getElementById('izin-pilih-semua')?.addEventListener('click', () => {
+    semua().forEach(cb => { cb.checked = true; });
+    document.querySelectorAll('.grup-toggle').forEach(g => { g.checked = true; });
+  });
+  document.getElementById('izin-kosongkan')?.addEventListener('click', () => {
+    semua().forEach(cb => { cb.checked = false; });
+    document.querySelectorAll('.grup-toggle').forEach(g => { g.checked = false; });
+  });
+
+  // "Semua" per grup
+  grid.querySelectorAll('.izin-grup').forEach(grup => {
+    const toggle = grup.querySelector('.grup-toggle');
+    const isi = grup.querySelectorAll('.izin-cb');
+    if (!toggle) return;
+    toggle.addEventListener('change', () => {
+      isi.forEach(cb => { cb.checked = toggle.checked; });
+    });
+  });
+
+  // Saat "Akses penuh" aktif, kunci semua centang (dikelola wildcard)
+  function terapkanPenuh() {
+    const on = penuh.checked;
+    grid.style.opacity = on ? '.55' : '1';
+    grid.style.pointerEvents = on ? 'none' : 'auto';
+  }
+  penuh?.addEventListener('change', terapkanPenuh);
+  terapkanPenuh();
+})();
+</script>
+{% endblock %}

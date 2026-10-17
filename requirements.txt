@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+pyjwt
+email-validator
+psycopg[binary]
+sqlalchemy
+alembic
+pydantic
+pydantic-settings
+python-dotenv
+bcrypt
+structlog
+fpdf2
+pillow
+openpyxl

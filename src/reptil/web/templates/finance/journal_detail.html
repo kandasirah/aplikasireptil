@@ -1,0 +1,45 @@
+{% extends "app.html" %}
+{% block title %}{{ entri.number }} — {{ app_name }}{% endblock %}
+{% block page_title %}Jurnal {{ entri.number }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>{{ entri.memo or entri.number }}</h2>
+    <a class="btn" href="/finance/journal">Daftar Jurnal</a>
+  </div>
+
+  <div class="detail-grid">
+    <div class="item"><div class="lbl">Nomor</div><div class="val"><strong>{{ entri.number }}</strong></div></div>
+    <div class="item"><div class="lbl">Tanggal</div><div class="val">{{ entri.tanggal | tanggal_id }}</div></div>
+    <div class="item"><div class="lbl">Sumber</div><div class="val">{{ LABEL_SUMBER.get(entri.sumber, entri.sumber) }}</div></div>
+    <div class="item"><div class="lbl">Status</div><div class="val"><span class="badge {{ 'on' if entri.status == 'posted' else 'cancelled' }}">{{ entri.status }}</span></div></div>
+    <div class="item"><div class="lbl">Nilai</div><div class="val"><strong>{{ entri.total | rupiah }}</strong></div></div>
+    <div class="item"><div class="lbl">Referensi</div><div class="val">{{ entri.ref_type or '—' }}</div></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><h2>Baris Debit / Kredit</h2></div>
+  <table>
+    <thead><tr><th>#</th><th>Akun</th><th>Pihak</th><th>Keterangan</th><th class="num">Debit</th><th class="num">Kredit</th></tr></thead>
+    <tbody>
+      {% for l in entri.lines %}
+      <tr>
+        <td>{{ l.line_no }}</td>
+        <td>{{ l.account.kode }} · {{ l.account.nama }}</td>
+        <td>{{ l.partner.nama if l.partner else '—' }}</td>
+        <td>{{ l.memo or '—' }}</td>
+        <td class="num">{{ l.debit | rupiah if l.debit else '' }}</td>
+        <td class="num">{{ l.credit | rupiah if l.credit else '' }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td colspan="4"><strong>Total</strong></td>
+        <td class="num"><strong>{{ entri.total | rupiah }}</strong></td>
+        <td class="num"><strong>{{ entri.total | rupiah }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}

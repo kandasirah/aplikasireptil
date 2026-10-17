@@ -1,0 +1,57 @@
+{% extends "app.html" %}
+{% block title %}Ekspedisi — {{ app_name }}{% endblock %}
+{% block page_title %}Ekspedisi / Kurir{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Ekspedisi</h2>
+    <form class="toolbar" method="get" action="/logistics/carriers">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nama / kode…">
+      <button class="btn" type="submit">Cari</button>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Kode</th><th>Nama</th><th>Telepon</th><th>URL Pelacakan</th><th>Status</th><th class="aksi">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for c in carriers %}
+      <tr>
+        <td>{{ c.kode }}</td>
+        <td><strong>{{ c.nama }}</strong></td>
+        <td>{{ c.telepon or '—' }}</td>
+        <td class="muted">{{ c.tracking_url or '—' }}</td>
+        <td><span class="badge {{ 'on' if c.is_active else 'off' }}">{{ 'Aktif' if c.is_active else 'Nonaktif' }}</span></td>
+        <td class="aksi"><a class="btn small" href="/logistics/carriers?edit={{ c.id }}">Ubah</a></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="6">Belum ada ekspedisi.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+
+<div class="panel">
+  <h2>{{ 'Ubah Ekspedisi' if edit_carrier else 'Tambah Ekspedisi' }}</h2>
+  <form method="post" action="/logistics/carriers">
+    <input type="hidden" name="carrier_id" value="{{ edit_carrier.id if edit_carrier else '' }}">
+    <div class="form-grid">
+      <div><label>Kode</label><input type="text" name="kode" value="{{ edit_carrier.kode if edit_carrier else '' }}" required></div>
+      <div><label>Nama</label><input type="text" name="nama" value="{{ edit_carrier.nama if edit_carrier else '' }}" required></div>
+      <div><label>Telepon</label><input type="text" name="telepon" value="{{ edit_carrier.telepon or '' if edit_carrier else '' }}"></div>
+      <div class="full"><label>URL Pelacakan (pakai {resi} sebagai placeholder)</label><input type="text" name="tracking_url" value="{{ edit_carrier.tracking_url or '' if edit_carrier else '' }}"></div>
+      <div><label>Aktif</label><input type="checkbox" name="is_active" {{ 'checked' if (not edit_carrier) or edit_carrier.is_active }}></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn primary" type="submit">{{ 'Simpan Perubahan' if edit_carrier else 'Tambah Ekspedisi' }}</button>
+      {% if edit_carrier %}<a class="btn" href="/logistics/carriers">Batal</a>{% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

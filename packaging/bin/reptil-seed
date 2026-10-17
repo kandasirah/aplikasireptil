@@ -1,0 +1,11 @@
+#!/bin/sh
+# REPTIL - tanam data awal / admin. Contoh:
+#   reptil-seed --with-demo --password 'Admin#2026'
+#   reptil-seed --keep-password    # di database berisi data nyata
+set -eu
+
+[ -r /etc/reptil/reptil.env ] && . /etc/reptil/reptil.env
+
+export PYTHONPATH="/opt/reptil/app/src${PYTHONPATH:+:$PYTHONPATH}"
+cd /opt/reptil/app
+exec /opt/reptil/venv/bin/python /opt/reptil/app/scripts/seed_admin.py "$@"

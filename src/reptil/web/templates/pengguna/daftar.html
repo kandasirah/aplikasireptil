@@ -1,0 +1,67 @@
+{% extends "app.html" %}
+{% block title %}Pengguna — {{ app_name }}{% endblock %}
+{% block page_title %}Manajemen Pengguna{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Pengguna</h2>
+    <form class="toolbar" method="get" action="/pengguna">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nama / email…">
+      <select name="aktif">
+        <option value="" {{ 'selected' if not aktif }}>Semua status</option>
+        <option value="aktif" {{ 'selected' if aktif == 'aktif' }}>Aktif</option>
+        <option value="nonaktif" {{ 'selected' if aktif == 'nonaktif' }}>Nonaktif</option>
+      </select>
+      <button class="btn" type="submit">Filter</button>
+      {% if is_superadmin or 'users.write' in izin %}
+      <a class="btn primary" href="/pengguna/baru">+ Pengguna Baru</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Nama</th><th>Peran</th><th>Status</th><th>Login Terakhir</th><th class="aksi">Aksi</th></tr>
+    </thead>
+    <tbody>
+      {% for p in pengguna %}
+      <tr>
+        <td>
+          <strong>{{ p.full_name }}</strong>
+          <div class="muted">{{ p.email }}</div>
+        </td>
+        <td>
+          {% for r in p.roles %}
+            <span class="chip">{{ r.name }}</span>
+          {% else %}
+            <span class="muted">Tanpa peran</span>
+          {% endfor %}
+        </td>
+        <td>
+          {% if p.is_active %}
+            <span class="badge on">Aktif</span>
+          {% else %}
+            <span class="badge off">Nonaktif</span>
+          {% endif %}
+        </td>
+        <td class="muted">{{ p.last_login_at.strftime('%d %b %Y %H:%M') if p.last_login_at else '—' }}</td>
+        <td class="aksi">
+          {% if is_superadmin or 'users.write' in izin %}
+          <a class="btn small" href="/pengguna/{{ p.id }}/ubah">Ubah</a>
+          {% else %}
+          <span class="muted">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="5">Belum ada pengguna pada organisasi ini.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

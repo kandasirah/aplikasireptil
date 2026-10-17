@@ -1,0 +1,9 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: reptil
+Source: https://reptil.co.id
+
+Files: *
+Copyright: 2026 REPTIL
+License: Proprietary
+ Perangkat lunak milik REPTIL. Penggunaan diatur oleh perjanjian lisensi
+ dengan pemegang hak cipta.

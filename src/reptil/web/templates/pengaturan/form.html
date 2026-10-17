@@ -1,0 +1,133 @@
+{% extends "app.html" %}
+{% block title %}Pengaturan — {{ app_name }}{% endblock %}
+{% block page_title %}Pengaturan Sistem{% endblock %}
+
+{% block content %}
+<form method="post" action="/pengaturan" enctype="multipart/form-data">
+  <input type="hidden" name="rev"
+         value="{{ baris.updated_at.isoformat() if baris and baris.updated_at else '' }}">
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Identitas Aplikasi</h2>
+      <span class="muted" style="font-size:12px">Tampil di sidebar, judul halaman, dan halaman login</span>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label>Nama Aplikasi</label>
+        <input type="text" name="app_name" required
+               value="{{ baris.app_name if baris else profil.app_name }}"
+               placeholder="REPTIL">
+      </div>
+      <div>
+        <label>Tagline</label>
+        <input type="text" name="app_tagline"
+               value="{{ baris.app_tagline or profil.app_tagline if baris else profil.app_tagline }}"
+               placeholder="Reliable Systems. Connected Business.">
+      </div>
+
+      <div class="full">
+        <label>Logo Aplikasi</label>
+        <div class="logo-row">
+          <div class="logo-preview">
+            {% if profil.app_logo_url %}
+              <img src="{{ profil.app_logo_url }}" alt="Logo aplikasi">
+            {% else %}
+              <span class="logo-kosong">Belum ada<br>logo</span>
+            {% endif %}
+          </div>
+          <div class="logo-aksi">
+            <input type="file" name="app_logo" accept="image/png,image/jpeg,image/webp">
+            <div class="muted" style="font-size:12px;margin-top:6px">
+              PNG, JPG, atau WEBP · maksimal 2 MB
+              {% if baris and baris.app_logo_name %}<br>Berkas saat ini: {{ baris.app_logo_name }}{% endif %}
+            </div>
+            {% if profil.app_logo_url %}
+            <label class="check" style="margin-top:10px">
+              <input type="checkbox" name="hapus_app_logo" value="1"> Hapus logo aplikasi
+            </label>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Identitas Perusahaan</h2>
+      <span class="muted" style="font-size:12px">Tampil di kop faktur &amp; laporan</span>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label>Nama Perusahaan</label>
+        <input type="text" name="company_name" value="{{ baris.company_name or '' if baris else '' }}"
+               placeholder="PT Reptil Nusantara">
+      </div>
+      <div>
+        <label>NPWP</label>
+        <input type="text" name="company_npwp" value="{{ baris.company_npwp or '' if baris else '' }}">
+      </div>
+      <div>
+        <label>Telepon</label>
+        <input type="text" name="company_phone" value="{{ baris.company_phone or '' if baris else '' }}">
+      </div>
+      <div>
+        <label>Email</label>
+        <input type="email" name="company_email" value="{{ baris.company_email or '' if baris else '' }}">
+      </div>
+      <div class="full">
+        <label>Alamat</label>
+        <textarea name="company_address" rows="2">{{ baris.company_address or '' if baris else '' }}</textarea>
+      </div>
+
+      <div class="full">
+        <label>Logo Perusahaan</label>
+        <div class="logo-row">
+          <div class="logo-preview">
+            {% if profil.company_logo_url %}
+              <img src="{{ profil.company_logo_url }}" alt="Logo perusahaan">
+            {% else %}
+              <span class="logo-kosong">Belum ada<br>logo</span>
+            {% endif %}
+          </div>
+          <div class="logo-aksi">
+            <input type="file" name="company_logo" accept="image/png,image/jpeg">
+            <div class="muted" style="font-size:12px;margin-top:6px">
+              PNG atau JPG · maksimal 2 MB · disematkan ke kop PDF faktur
+              {% if baris and baris.company_logo_name %}<br>Berkas saat ini: {{ baris.company_logo_name }}{% endif %}
+            </div>
+            {% if profil.company_logo_url %}
+            <label class="check" style="margin-top:10px">
+              <input type="checkbox" name="hapus_company_logo" value="1"> Hapus logo perusahaan
+            </label>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Konfigurasi Faktur</h2>
+      <span class="muted" style="font-size:12px">Catatan &amp; syarat yang dicetak di bawah faktur</span>
+    </div>
+    <div class="form-grid">
+      <div class="full">
+        <label>Catatan Faktur</label>
+        <textarea name="invoice_note" rows="2" placeholder="Pembayaran melalui transfer ke rekening ...">{{ baris.invoice_note or '' if baris else '' }}</textarea>
+      </div>
+      <div class="full">
+        <label>Syarat &amp; Ketentuan</label>
+        <textarea name="invoice_terms" rows="2" placeholder="Barang yang sudah dibeli tidak dapat ditukar setelah 3 hari.">{{ baris.invoice_terms or '' if baris else '' }}</textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button class="btn primary" type="submit">Simpan Pengaturan</button>
+    <a class="btn" href="/dashboard">Batal</a>
+  </div>
+</form>
+{% endblock %}

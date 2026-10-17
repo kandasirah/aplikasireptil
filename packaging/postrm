@@ -1,0 +1,25 @@
+#!/bin/sh
+# postrm - bersihkan sisa saat purge (data konfigurasi & akun sistem).
+set -eu
+
+case "$1" in
+    purge)
+        rm -rf /etc/reptil
+        if getent passwd reptil >/dev/null; then
+            deluser --system reptil >/dev/null 2>&1 || true
+        fi
+        if getent group reptil >/dev/null; then
+            delgroup --system reptil >/dev/null 2>&1 || true
+        fi
+        ;;
+    remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        ;;
+    *)
+        ;;
+esac
+
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload >/dev/null 2>&1 || true
+fi
+
+exit 0

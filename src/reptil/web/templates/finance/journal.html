@@ -1,0 +1,46 @@
+{% extends "app.html" %}
+{% block title %}Jurnal Umum — {{ app_name }}{% endblock %}
+{% block page_title %}Jurnal Umum{% endblock %}
+
+{% import "_pager.html" as pg %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <h2>Daftar Jurnal</h2>
+    <form class="toolbar" method="get" action="/finance/journal">
+      <input type="text" name="q" value="{{ q }}" placeholder="Cari nomor / memo…">
+      <select name="sumber">
+        <option value="">Semua sumber</option>
+        {% for kunci, label in LABEL_SUMBER.items() %}
+        <option value="{{ kunci }}" {{ 'selected' if sumber == kunci }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <input type="date" name="dari" value="{{ dari }}">
+      <input type="date" name="sampai" value="{{ sampai }}">
+      <button class="btn" type="submit">Filter</button>
+      <a class="btn" href="/finance/trial-balance">Neraca Saldo</a>
+    </form>
+  </div>
+
+  <table>
+    <thead><tr><th>Nomor</th><th>Tanggal</th><th>Sumber</th><th>Memo</th><th class="num">Nilai</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for j in entri %}
+      <tr>
+        <td><a href="/finance/journal/{{ j.id }}">{{ j.number }}</a></td>
+        <td>{{ j.tanggal | tanggal_id }}</td>
+        <td>{{ LABEL_SUMBER.get(j.sumber, j.sumber) }}</td>
+        <td>{{ j.memo or '—' }}</td>
+        <td class="num">{{ j.total | rupiah }}</td>
+        <td><span class="badge {{ 'on' if j.status == 'posted' else 'cancelled' }}">{{ j.status }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td class="empty" colspan="6">Belum ada jurnal pada rentang ini.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {{ pg.pager(h) }}
+</div>
+{% endblock %}

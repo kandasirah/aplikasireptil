@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  {% if profil.app_logo_url %}<link rel="icon" href="{{ profil.app_logo_url }}">{% endif %}
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      {% if profil.app_logo_url %}
+        <img class="brand-logo" src="{{ profil.app_logo_url }}" alt="Logo {{ app_name }}">
+      {% else %}
+        <div class="brand-mark">{{ app_name[0] | upper }}</div>
+      {% endif %}
+      <div>
+        <span class="brand-name">{{ app_name }}</span>
+        <span class="brand-tag">{{ profil.app_tagline }}</span>
+      </div>
+    </div>
+
+    <nav class="nav">
+      {% set boleh = is_superadmin %}
+      <a href="/dashboard" class="{{ 'active' if active == 'dashboard' }}">Dashboard</a>
+
+      {% if boleh or 'masterdata.read' in izin %}
+      <div class="nav-title">Master Data</div>
+      <a href="/master/partners" class="{{ 'active' if active == 'partners' }}">Partner</a>
+      <a href="/master/items" class="{{ 'active' if active == 'items' }}">Item</a>
+      <a href="/master/warehouses" class="{{ 'active' if active == 'warehouses' }}">Gudang</a>
+      {% endif %}
+
+      {% if boleh or 'purchasing.read' in izin or 'sales.read' in izin %}
+      <div class="nav-title">Operasional</div>
+      {% if boleh or 'purchasing.read' in izin %}
+      <a href="/purchases/orders" class="{{ 'active' if active == 'po' }}">Pesanan Pembelian</a>
+      <a href="/purchases/invoices" class="{{ 'active' if active == 'fb' }}">Faktur Pembelian</a>
+      {% endif %}
+      {% if boleh or 'sales.read' in izin %}
+      <a href="/sales/orders" class="{{ 'active' if active == 'so' }}">Pesanan Penjualan</a>
+      <a href="/sales/invoices" class="{{ 'active' if active == 'fj' }}">Faktur Penjualan</a>
+      {% endif %}
+      {% endif %}
+
+      {% if boleh or 'inventory.read' in izin %}
+      <div class="nav-title">Inventory</div>
+      <a href="/inventory/stock" class="{{ 'active' if active == 'stock' }}">Saldo Stok</a>
+      <a href="/inventory/movements" class="{{ 'active' if active == 'mutasi' }}">Kartu Stok</a>
+      {% endif %}
+
+      {% if boleh or 'finance.read' in izin %}
+      <div class="nav-title">Keuangan</div>
+      <a href="/finance" class="{{ 'active' if active == 'finance' }}">Ringkasan</a>
+      <a href="/finance/payables" class="{{ 'active' if active == 'payables' }}">Utang Usaha</a>
+      <a href="/finance/receivables" class="{{ 'active' if active == 'receivables' }}">Piutang Usaha</a>
+      <a href="/finance/payments" class="{{ 'active' if active == 'payments' }}">Pembayaran</a>
+      <a href="/finance/journal" class="{{ 'active' if active == 'journal' }}">Jurnal Umum</a>
+      <a href="/finance/accounts" class="{{ 'active' if active == 'accounts' }}">Bagan Akun</a>
+      <a href="/finance/trial-balance" class="{{ 'active' if active == 'trial' }}">Neraca Saldo</a>
+
+      <div class="nav-title">Laporan</div>
+      <a href="/reports" class="{{ 'active' if active == 'reports' }}">Ringkasan Laporan</a>
+      <a href="/reports/sales" class="{{ 'active' if active == 'reports-penjualan' }}">Analisis Penjualan</a>
+      <a href="/reports/profit-loss" class="{{ 'active' if active == 'reports-laba' }}">Laba Rugi</a>
+      <a href="/reports/stock" class="{{ 'active' if active == 'reports-stok' }}">Nilai Persediaan</a>
+      {% endif %}
+
+      {% if boleh or 'logistics.read' in izin %}
+      <div class="nav-title">Logistik</div>
+      <a href="/logistics/shipments" class="{{ 'active' if active == 'shipments' }}">Pengiriman</a>
+      <a href="/logistics/vehicles" class="{{ 'active' if active == 'vehicles' }}">Armada</a>
+      <a href="/logistics/carriers" class="{{ 'active' if active == 'carriers' }}">Ekspedisi</a>
+      <a href="/logistics/routes" class="{{ 'active' if active == 'routes' }}">Rute</a>
+      {% endif %}
+
+      <div class="nav-title">Sistem</div>
+      {% if boleh or 'users.read' in izin %}
+      <a href="/pengguna" class="{{ 'active' if active == 'pengguna' }}">Pengguna</a>
+      {% endif %}
+      {% if boleh or 'roles.read' in izin %}
+      <a href="/peran" class="{{ 'active' if active == 'peran' }}">Peran &amp; Izin</a>
+      {% endif %}
+      {% if boleh or 'settings.read' in izin %}
+      <a href="/pengaturan" class="{{ 'active' if active == 'pengaturan' }}">Pengaturan</a>
+      {% endif %}
+      {% if boleh or 'database.read' in izin %}
+      <a href="/database" class="{{ 'active' if active == 'database' }}">Manajemen Database</a>
+      {% endif %}
+      <a href="/docs" target="_blank">API Docs</a>
+      <a href="/health" target="_blank">Status Sistem</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+        <div class="sub">{{ profil.perusahaan }} · {{ org.code }}</div>
+      </div>
+      <div class="userbox">
+        <div style="text-align:right">
+          <div><strong>{{ user.full_name }}</strong></div>
+          <div class="sub">{{ user.email }}</div>
+        </div>
+        {% if profil.company_logo_url %}
+          <img class="avatar-img" src="{{ profil.company_logo_url }}" alt="{{ profil.perusahaan }}">
+        {% else %}
+          <div class="avatar">{{ user.full_name[0] | upper }}</div>
+        {% endif %}
+        <a class="btn-logout" href="/logout">Keluar</a>
+      </div>
+    </header>
+
+    <main class="content">
+      {% if msg %}<div class="alert ok">{{ msg }}</div>{% endif %}
+      {% if err %}<div class="alert">{{ err }}</div>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-info">
+        <strong>{{ sistem.aplikasi }}</strong> v{{ sistem.versi }}
+        <span class="sep">·</span> Lingkungan: <strong>{{ sistem.lingkungan }}</strong>
+        <span class="sep">·</span> Basis data: <strong>{{ sistem.database }}</strong>
+        <span class="sep">·</span> Python {{ sistem.python }}
+      </div>
+      <div class="footer-meta">
+        {{ sistem.waktu }} {{ sistem.zona }}
+        <span class="sep">·</span> {{ user.email }}
+        <span class="sep">·</span> <a href="/pengaturan">Pengaturan Sistem</a>
+      </div>
+    </footer>
+  </div>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,111 @@
+{% extends "app.html" %}
+{% block title %}Proses Data — {{ app_name }}{% endblock %}
+{% block page_title %}{{ label_jenis.get(pekerjaan.jenis, pekerjaan.jenis) }}{% endblock %}
+
+{% block content %}
+{% set kelas_job = {'menunggu': 'draft', 'berjalan': 'invoiced', 'selesai': 'paid', 'gagal': 'cancelled'} %}
+<div class="panel" id="panel-proses">
+  <div class="panel-head">
+    <h2>Progres</h2>
+    <span class="badge {{ kelas_job.get(pekerjaan.status, 'draft') }}" id="badge-status">
+      {{ label_status.get(pekerjaan.status, pekerjaan.status) }}
+    </span>
+  </div>
+
+  <div class="progress"><span id="bar" style="width: {{ pekerjaan.persen }}%"></span></div>
+  <p style="margin-top:10px">
+    <strong id="teks-persen">{{ pekerjaan.persen }}%</strong>
+    <span class="muted" id="teks-tahap">— {{ pekerjaan.tahap or '' }}</span>
+  </p>
+  {% if pekerjaan.pesan %}<div class="alert {{ 'ok' if pekerjaan.status == 'selesai' else '' }}" id="teks-pesan">{{ pekerjaan.pesan }}</div>{% endif %}
+
+  <table style="margin-top:12px">
+    <tbody>
+      <tr><td class="muted">Jenis</td><td>{{ label_jenis.get(pekerjaan.jenis, pekerjaan.jenis) }}</td></tr>
+      <tr><td class="muted">Parameter</td><td><code>{{ pekerjaan.parameter }}</code></td></tr>
+      <tr><td class="muted">Mulai</td><td>{{ pekerjaan.mulai_pada.strftime('%Y-%m-%d %H:%M:%S') if pekerjaan.mulai_pada else '—' }}</td></tr>
+      <tr><td class="muted">Selesai</td><td>{{ pekerjaan.selesai_pada.strftime('%Y-%m-%d %H:%M:%S') if pekerjaan.selesai_pada else '—' }}</td></tr>
+    </tbody>
+  </table>
+
+  <div class="toolbar" style="margin-top:12px">
+    <a class="btn" href="/database">Kembali ke Manajemen Database</a>
+    <a class="btn" href="/database/jobs">Riwayat Proses</a>
+  </div>
+</div>
+
+{% if pekerjaan.hasil and pekerjaan.jenis == 'demo' and pekerjaan.hasil.get('demo') %}
+{% set d = pekerjaan.hasil['demo'] %}
+<div class="panel">
+  <div class="panel-head"><h2>Ringkasan Data Demo</h2></div>
+  <div class="stat-row">
+    <div class="stat-card"><div class="lbl">Faktur Penjualan</div><div class="val">{{ d.faktur_jual }}</div><div class="sub">{{ d.bulan }} bulan riwayat</div></div>
+    <div class="stat-card"><div class="lbl">Faktur Pembelian</div><div class="val">{{ d.faktur_beli }}</div><div class="sub">total {{ d.total_pembelian | rupiah }}</div></div>
+    <div class="stat-card"><div class="lbl">Pembayaran</div><div class="val">{{ d.pembayaran }}</div><div class="sub">{{ d.pengiriman }} pengiriman</div></div>
+    <div class="stat-card"><div class="lbl">Saldo Kas</div><div class="val">{{ d.kas | rupiah }}</div><div class="sub">persediaan {{ d.nilai_persediaan | rupiah }}</div></div>
+  </div>
+  <table style="margin-top:12px">
+    <tbody>
+      <tr><td class="muted">Total penjualan</td><td class="num">{{ d.total_penjualan | rupiah }}</td></tr>
+      <tr><td class="muted">Total HPP</td><td class="num">{{ d.total_hpp | rupiah }}</td></tr>
+      <tr><td class="muted">Baris jurnal</td><td class="num">{{ d.baris_jurnal }}</td></tr>
+      <tr><td class="muted">Jurnal per sumber</td><td>{{ d.per_jurnal }}</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if pekerjaan.hasil and pekerjaan.jenis == 'reset' %}
+<div class="panel">
+  <div class="panel-head"><h2>Ringkasan Penghapusan</h2></div>
+  <table>
+    <thead><tr><th>Data</th><th class="num">Baris dihapus</th></tr></thead>
+    <tbody>
+      {% for b in pekerjaan.hasil.get('dihapus', []) %}
+      <tr><td>{{ b.label }}</td><td class="num">{{ b.jumlah }}</td></tr>
+      {% endfor %}
+      <tr><td><strong>Total</strong></td><td class="num"><strong>{{ pekerjaan.hasil.get('total', 0) }}</strong></td></tr>
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<script>
+(function () {
+  var status = {{ pekerjaan.status | tojson }};
+  if (status === 'selesai' || status === 'gagal') { return; }
+  var url = "/database/jobs/{{ pekerjaan.id }}/status";
+  var petaKelas = {menunggu: 'draft', berjalan: 'invoiced', selesai: 'paid', gagal: 'cancelled'};
+  function perbarui() {
+    fetch(url, {headers: {'Accept': 'application/json'}})
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.ada) { return; }
+        document.getElementById('bar').style.width = d.persen + '%';
+        document.getElementById('teks-persen').textContent = d.persen + '%';
+        document.getElementById('teks-tahap').textContent = '— ' + d.tahap;
+        var badge = document.getElementById('badge-status');
+        badge.textContent = d.label_status;
+        badge.className = 'badge ' + (petaKelas[d.status] || 'draft');
+        if (d.pesan) {
+          var pesan = document.getElementById('teks-pesan');
+          if (!pesan) {
+            pesan = document.createElement('div');
+            pesan.id = 'teks-pesan';
+            document.getElementById('bar').parentNode.insertBefore(pesan, document.getElementById('bar').nextSibling);
+          }
+          pesan.textContent = d.pesan;
+          pesan.className = 'alert ' + (d.status === 'selesai' ? 'ok' : '');
+        }
+        if (d.selesai) {
+          window.location.reload();
+        } else {
+          setTimeout(perbarui, 1500);
+        }
+      })
+      .catch(function () { setTimeout(perbarui, 3000); });
+  }
+  setTimeout(perbarui, 1200);
+})();
+</script>
+{% endblock %}
