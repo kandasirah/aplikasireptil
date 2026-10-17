@@ -10,7 +10,6 @@ pembelian, penjualan, dan logistik dalam satu alur kerja yang saling terhubung.
 ## Dokumen
 
 - [Panduan Rancangan (Design Blueprint)](docs/DESAIN.md) — arsitektur, struktur modul, model data, roadmap.
-- [Pemaketan `.deb`](docs/PAKET_DEB.md) — build & pasang paket aplikasi (tanpa PostgreSQL/pgAdmin).
 
 ## Teknologi
 
